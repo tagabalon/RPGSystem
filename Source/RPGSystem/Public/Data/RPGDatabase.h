@@ -4,8 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "GameSettings.h"
-#include "RPGCharacter.h"
+#include "RPGCharacters.h"
+#include "RPGClasses.h"
+#include "RPGSkills.h"
 #include "BuildData.h"
 
 #include "RPGDatabase.generated.h"
@@ -20,16 +21,14 @@ class RPGSYSTEM_API URPGDatabase : public UPrimaryDataAsset
 	GENERATED_BODY()
 	
 public:
-	/** Please add a variable description */
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Database")
-	TArray<URPGCharacter*> Characters;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Databases")
+	TSoftObjectPtr<URPGCharacters> CharactersDatabase;
 
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Database")
-	TArray<UBuildData*> Builds;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Databases")
+	TSoftObjectPtr<URPGClasses> ClassesDatabase;
 
-	/** Please add a variable description */
-	UPROPERTY(BlueprintReadWrite, EditDefaultsOnly, Category = "Database")
-	TObjectPtr<UGameSettings> GameSettings;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Databases")
+	TSoftObjectPtr<URPGSkills> SkillsDatabase;
 
 
 };
