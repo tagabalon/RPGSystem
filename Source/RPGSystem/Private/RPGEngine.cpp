@@ -2,7 +2,7 @@
 
 #include "RPGEngine.h"
 
-#include "Actors/MainCharacter.h"
+#include "Actors/RPGPlayerCharacter.h"
 
 #include "Interfaces/IPluginManager.h"
 #include "Containers/StringConv.h"

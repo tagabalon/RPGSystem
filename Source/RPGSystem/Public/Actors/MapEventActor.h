@@ -7,7 +7,7 @@
 #include "MapEvent.h"
 #include "MapEventActor.generated.h"
 
-class AMainCharacter;
+class ARPGPlayerCharacter;
 class UInteractInterface;
 class USphereComponent;
 class UWidgetComponent;
@@ -92,7 +92,7 @@ protected:
 private:
 	bool CharacterCanBePrompted() const;
 
-	AMainCharacter* GlintedCharacter = nullptr;
+	ARPGPlayerCharacter* GlintedCharacter = nullptr;
 	UUserWidget* InteractWidget = nullptr;
 	bool bIsCharacterPrompted = false;
 	bool bIsEventRunning = false;

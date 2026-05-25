@@ -4,13 +4,15 @@
 
 #include "CoreMinimal.h"
 #include "Engine/DataAsset.h"
-#include "RPGCharacters.h"
-#include "RPGClasses.h"
-#include "RPGSkills.h"
 #include "BuildData.h"
 
 #include "RPGDatabase.generated.h"
 
+class URPGCharacters;
+class URPGClasses;
+class URPGItems;
+class URPGSkills;
+class URPGGameSettings;
 
 /**
  * 
@@ -30,5 +32,14 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Databases")
 	TSoftObjectPtr<URPGSkills> SkillsDatabase;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Databases")
+	TSoftObjectPtr<URPGItems> ItemsDatabase;
 
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Databases")
+	TSoftObjectPtr<URPGGameSettings> GameSettings;
+
+	static const URPGDatabase* GetRPGDatabase();
+
+	static const TArray<FName> GetRPGCharacterIds();
+	static const TArray<FName> GetRPGClassIds();
 };

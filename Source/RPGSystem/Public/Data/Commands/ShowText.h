@@ -1,13 +1,14 @@
 #pragma once
 
-#include "BaseCommand.h"
+#include "RPGCommand.h"
+
 #include "ShowText.generated.h"
 
 class AMapEventActor;
 /*
 */
 UCLASS(Blueprintable, Category="RPG System")
-class RPGSYSTEM_API UShowText : public UBaseCommand
+class RPGSYSTEM_API UShowText : public URPGCommand
 {
 	GENERATED_BODY()
 
@@ -29,13 +30,13 @@ public:
 	bool IsUINeeded() { return true; }
 
 	//BaseCommand
-	virtual FText GetCategory() const
+	/*virtual FText GetCategory() const
 	{
 		return CategoryMessage;
-	}
+	}*/
 
-	virtual FText GetLabel() const {
+	/*virtual FText GetLabel() const {
 		return FText::FromString(TEXT("Show Text"));
-	}
+	}*/
 
 };

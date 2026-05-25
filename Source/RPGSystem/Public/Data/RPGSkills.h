@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+//#include "RPGDerivedStats.h"
 
 #include "RPGSkills.generated.h"
 
@@ -233,14 +234,6 @@ struct FRPGPassiveEffect
 };
 
 USTRUCT(BlueprintType)
-struct FRPGDerivedStatModifier
-{
-	GENERATED_BODY()
-
-	// TODO: Replace with your real DerivedStats.Modifier conversion.
-};
-
-USTRUCT(BlueprintType)
 struct FRPGSkillData
 {
 	GENERATED_BODY()
@@ -281,8 +274,8 @@ struct FRPGSkillData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float Speed = 1.0f;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
-	FRPGDerivedStatModifier AttackMod;
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
+	FRPGDerivedStatModifier AttackMod;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	int32 StaminaGain = 10;

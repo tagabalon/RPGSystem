@@ -1,9 +1,8 @@
 #include "Commands/PlaySpeech.h"
 
-#include "Actors/MainCharacter.h"
+#include "Actors/RPGPlayerCharacter.h"
 #include "Actors/MapEventActor.h"
 #include "Commands/ShowChoices.h"
-#include "Commands/ShowText.h"
 #include "Interface/MessageInterface.h"
 #include "RPGSettings.h"
 #include "MapEvent.h"
@@ -41,10 +40,10 @@ void UPlaySpeech::Execute(APlayerController* InPlayer, AMapEventActor* InMapEven
 			}
 		}
 
-		if (AMainCharacter* MainCharacter = CastChecked<AMainCharacter>(Player->GetPawn()))
+		if (ARPGPlayerCharacter* MainCharacter = CastChecked<ARPGPlayerCharacter>(Player->GetPawn()))
 		{
-			MainCharacter->EnableMovement(false);
-			MainCharacter->EnableCamera(false);
+			//MainCharacter->EnableMovement(false);
+			//MainCharacter->EnableCamera(false);
 		}
 	}
 }
@@ -58,7 +57,7 @@ void UPlaySpeech::OnSpeechPlayed()
 	if (NextCommand != nullptr)
 	{
 		NextCommand->Execute(Player, MapEventActor);
-		if (NextCommand->IsA(UShowText::StaticClass()) || NextCommand->IsA(StaticClass()) || NextCommand->IsA(UShowChoices::StaticClass()))
+		if (/*NextCommand->IsA(UShowText::StaticClass())|| */ NextCommand->IsA(StaticClass()) || NextCommand->IsA(UShowChoices::StaticClass()))
 		{
 			return;
 		}
@@ -76,9 +75,9 @@ void UPlaySpeech::OnSpeechPlayed()
 		}
 	}
 
-	if (AMainCharacter* MainCharacter = CastChecked<AMainCharacter>(Player->GetPawn()))
+	if (ARPGPlayerCharacter* MainCharacter = CastChecked<ARPGPlayerCharacter>(Player->GetPawn()))
 	{
-		MainCharacter->EnableMovement(true);
-		MainCharacter->EnableCamera(true);
+		//MainCharacter->EnableMovement(true);
+		//MainCharacter->EnableCamera(true);
 	}
 }

@@ -35,13 +35,17 @@ public class RPGSystem : ModuleRules
 		PrivateDependencyModuleNames.AddRange(
 			new string[]
 			{
+				"Core",
 				"CoreUObject",
 				"Engine",
 				"Slate",
 				"SlateCore",
 				"UMG",
 				"DeveloperSettings",
-				"EnhancedInput"
+				"EnhancedInput",
+				"InputCore",
+				"UnrealEd",
+				"AssetTools"
 				// ... add private dependencies that you statically link with here ...	
 			}
 			);

@@ -3,7 +3,7 @@
 
 #include "Actors/MapEventActor.h"
 
-#include "Actors/MainCharacter.h"
+#include "Actors/RPGPlayerCharacter.h"
 #include "Interface/InteractInterface.h"
 
 #include "Components/SphereComponent.h"
@@ -91,7 +91,7 @@ void AMapEventActor::Tick(float DeltaTime)
 		if (!CharacterCanBePrompted())
 		{
 			IInteractInterface::Execute_ShowGlint(InteractWidget);
-			GlintedCharacter->SetInteractable(nullptr);
+			//GlintedCharacter->SetInteractable(nullptr);
 			bIsCharacterPrompted = false;
 		}
 	}
@@ -100,7 +100,7 @@ void AMapEventActor::Tick(float DeltaTime)
 		if (CharacterCanBePrompted())
 		{
 			IInteractInterface::Execute_ShowPrompt(InteractWidget);
-			GlintedCharacter->SetInteractable(this);
+			//GlintedCharacter->SetInteractable(this);
 			bIsCharacterPrompted = true;
 		}
 	}
@@ -110,8 +110,8 @@ bool AMapEventActor::CharacterCanBePrompted() const
 {
 	if (GlintedCharacter != nullptr)
 	{
-		float squareDistance = (GetActorLocation() - GlintedCharacter->GetActorLocation()).SquaredLength();
-		return squareDistance < PromptDistance * PromptDistance;
+		//float squareDistance = (GetActorLocation() - GlintedCharacter->GetActorLocation()).SquaredLength();
+		//return squareDistance < PromptDistance * PromptDistance;
 	}
 	return false;
 }
@@ -135,9 +135,9 @@ void AMapEventActor::SetPromptDistance(float InPromptDistance)
 
 void AMapEventActor::OnSphereOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {
-	if (OtherActor && OtherActor->IsA(AMainCharacter::StaticClass()))
+	if (OtherActor && OtherActor->IsA(ARPGPlayerCharacter::StaticClass()))
 	{
-		GlintedCharacter = Cast<AMainCharacter>(OtherActor);
+		GlintedCharacter = Cast<ARPGPlayerCharacter>(OtherActor);
 		bIsCharacterPrompted = false;
 
 		IInteractInterface::Execute_ShowGlint(InteractWidget);

@@ -1,6 +1,6 @@
 #include "Commands/ShowChoices.h"
 
-#include "Actors/MainCharacter.h"
+#include "Actors/RPGPlayerCharacter.h"
 #include "Actors/MapEventActor.h"
 #include "Branch/DialogueChoice.h"
 #include "Interface/MessageInterface.h"
@@ -102,10 +102,10 @@ void UShowChoices::SelectBranch(int32 SelectedChoice)
 				}
 			}
 
-			if (AMainCharacter* MainCharacter = CastChecked<AMainCharacter>(Player->GetPawn()))
+			if (ARPGPlayerCharacter* MainCharacter = CastChecked<ARPGPlayerCharacter>(Player->GetPawn()))
 			{
-				MainCharacter->EnableMovement(true);
-				MainCharacter->EnableCamera(true);
+				//MainCharacter->EnableMovement(true);
+				//MainCharacter->EnableCamera(true);
 			}
 
 		}

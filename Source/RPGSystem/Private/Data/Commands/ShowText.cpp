@@ -1,4 +1,4 @@
-#include "Commands/ShowText.h"
+#include "Data/Commands/ShowText.h"
 
 #include "Actors/MapEventActor.h"
 #include "Interface/MessageInterface.h"
@@ -11,11 +11,13 @@
 
 void UShowText::Execute(APlayerController* Player, AMapEventActor* MapEventActor)
 {
-	if (AHUD* HUD = Player->GetHUD())
+
+
+	/*if (AHUD* HUD = Player->GetHUD())
 	{
 		if (HUD->GetClass()->ImplementsInterface(UMessageInterface::StaticClass()))
 		{
 			IMessageInterface::Execute_ShowText(HUD, this);
 		}
-	}
+	}*/
 }

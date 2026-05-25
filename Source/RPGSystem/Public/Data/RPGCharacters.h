@@ -1,17 +1,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "RPGClasses.h"
+#include "RPGConstants.h"
 #include "RPGTypes.h"
+#include "Data/RPGDatabase.h"
 
 #include "RPGCharacters.generated.h"
 
-//class UPaperSprite;
-//class UTexture2D;
-//class USkeletalMesh;
-//class UAnimBlueprint;
-//class UActorSkills;
-
+class URPGClasses;
+class ARPGFieldCharacter;
 
 USTRUCT(BlueprintType)
 struct FEquipArmor
@@ -25,34 +22,23 @@ struct FEquipArmor
 	int32 ArmorId = 0;
 };
 
-USTRUCT(BlueprintType)
-struct FRPGCharacterId
-{
-	GENERATED_BODY()
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 RPGCharacterId = -1;
-
-	FRPGCharacterId() = default;
-	explicit FRPGCharacterId(int32 InId) : RPGCharacterId(InId) {}
-};
 
 USTRUCT(BlueprintType)
 struct FRPGCharacterData
 {
 	GENERATED_BODY()
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Identity")
+	FName RPGCharacterId;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General Settings")
-	FString Name;
+	FString RPGCharacterName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General Settings")
 	FString Nickname;
 
-	/*UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	ECharacterBuildType BuildType = ECharacterBuildType::None;*/
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (GetOptions = "GetClassNameOptions"), Category = "General Settings")
-	FName ClassId;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (GetOptions = "GetClassIdsOptions"), Category = "General Settings")
+	FName RPGClassId;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General Settings")
 	int32 InitialLevel = 1;
@@ -70,9 +56,8 @@ struct FRPGCharacterData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UTexture2D> BattlePortrait = nullptr;
 
-	// Replace these with your actual UE actor/mesh classes later.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<AActor> FieldCharacterClass;
+	TSoftClassPtr<ARPGFieldCharacter> FieldCharacterClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<UAnimInstance> BattleAnimatorClass;
@@ -81,7 +66,7 @@ struct FRPGCharacterData
 	TArray<int32> StatBonuses = { 0, 0, 0, 0, 0, 0 };
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<int32> Equipments = { -1, -1, -1, -1, -1, -1, -1 };
+	TMap<FName, FName> StartingEquipment;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TArray<FEquipArmor> Armors;
@@ -107,6 +92,8 @@ struct FRPGCharacterData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TObjectPtr<UObject> SkillTree = nullptr;
 
+	FRPGCharacterData();
+
 	void AddAttackSkill(int32 SkillIndex)
 	{
 		AttackSkills.Add(SkillIndex);
@@ -114,13 +101,13 @@ struct FRPGCharacterData
 
 	void AdjustEquip(int32 NewLength)
 	{
-		const int32 OldLength = Equipments.Num();
+		/*const int32 OldLength = Equipments.Num();
 		Equipments.SetNum(NewLength);
 
 		for (int32 i = OldLength; i < NewLength; ++i)
 		{
 			Equipments[i] = -1;
-		}
+		}*/
 	}
 };
 
@@ -130,45 +117,10 @@ class RPGSYSTEM_API URPGCharacters : public UPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
-	UPROPERTY(EditAnywhere, BlueprintReadOnly)
-	TObjectPtr<URPGClasses> ClassDatabase;
-	
-	// Try hard-loading it later
-	/*static URPGClasses* GetClassesDatabase()
-	{
-		static TWeakObjectPtr<URPGClasses> CachedDatabase;
-
-		if (CachedDatabase.IsValid())
-		{
-			return CachedDatabase.Get();
-		}
-
-		const FSoftObjectPath AssetPath(
-			TEXT("/Game/Data/DA_RPGClasses.DA_RPGClasses")
-		);
-
-		URPGClasses* LoadedDatabase = Cast<URPGClasses>(AssetPath.TryLoad());
-		CachedDatabase = LoadedDatabase;
-
-		return LoadedDatabase;
-	}*/
-
 	UFUNCTION()
-	TArray<FString> GetClassNameOptions() const
+	TArray<FName> GetClassIdsOptions() const
 	{
-		TArray<FString> Options;
-
-		if (!ClassDatabase)
-		{
-			return Options;
-		}
-
-		for (const FRPGClassData& ClassData : ClassDatabase->Classes)
-		{
-			Options.Add(ClassData.ClassId.ToString());
-		}
-
-		return Options;
+        return URPGDatabase::GetRPGClassIds();
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
@@ -181,15 +133,21 @@ public:
 	}
 
 	UFUNCTION(BlueprintPure)
-	bool GetCharacter(int32 Index, FRPGCharacterData& OutCharacter) const
+	bool GetCharacterData(FName CharacterId, FRPGCharacterData& OutCharacter) const
 	{
-		if (!Characters.IsValidIndex(Index))
+		const int32 Index = Characters.IndexOfByPredicate([&](const FRPGCharacterData& Character)
 		{
-			return false;
+			return Character.RPGCharacterId == CharacterId;
+        });
+
+
+		if (Characters.IsValidIndex(Index))
+		{
+			OutCharacter = Characters[Index];
+			return true;
 		}
 
-		OutCharacter = Characters[Index];
-		return true;
+		return false;
 	}
 
 	UFUNCTION(BlueprintCallable)
@@ -206,7 +164,21 @@ public:
 
 		for (const FRPGCharacterData& Character : Characters)
 		{
-			Names.Add(Character.Name);
+			Names.Add(Character.RPGCharacterName);
+		}
+
+		return Names;
+	}
+
+	UFUNCTION(BlueprintPure)
+	TArray<FName> GetCharacterIds() const
+	{
+		TArray<FName> Names;
+		Names.Reserve(Characters.Num());
+
+		for (const FRPGCharacterData& Character : Characters)
+		{
+			Names.Add(Character.RPGCharacterId);
 		}
 
 		return Names;

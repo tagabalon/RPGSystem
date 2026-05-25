@@ -183,15 +183,35 @@ public:
 	}
 
 	UFUNCTION(BlueprintPure)
-	bool GetClass(int32 Index, FRPGClassData& OutClass) const
+	TArray<FName> GetClassIds() const
 	{
-		if (!Classes.IsValidIndex(Index))
+		TArray<FName> Names;
+		Names.Reserve(Classes.Num());
+
+		for (const FRPGClassData& ClassData : Classes)
 		{
-			return false;
+			Names.Add(ClassData.ClassId);
 		}
 
-		OutClass = Classes[Index];
-		return true;
+		return Names;
+	}
+
+	UFUNCTION(BlueprintPure)
+	bool GetClass(FName ClassId, FRPGClassData& OutClass) const
+	{
+		const int32 Index = Classes.IndexOfByPredicate([&](const FRPGClassData& Class)
+			{
+				return Class.ClassId == ClassId;
+			});
+
+
+		if (Classes.IsValidIndex(Index))
+		{
+			OutClass = Classes[Index];
+			return true;
+		}
+
+		return false;
 	}
 
 	UFUNCTION(BlueprintCallable)
@@ -208,3 +228,89 @@ public:
 		return Classes.Add(NewClass);
 	}
 };
+
+/*
+#include "AssetToolsModule.h"
+#include "Curves/CurveFloat.h"
+#include "PackageTools.h"
+
+#if WITH_EDITOR
+#include "AssetRegistry/AssetRegistryModule.h"
+#endif
+
+void URPGClasses::CreateDefaultCurvesForClass(FRPGClassData& ClassData)
+{
+	ClassData.BaseStats.SetNum(6);
+
+	const FString ClassName = ClassData.ClassId.ToString();
+
+	static const TCHAR* StatNames[] =
+	{
+		TEXT("Strength"),
+		TEXT("Agility"),
+		TEXT("Fortitude"),
+		TEXT("Intelligence"),
+		TEXT("Cunning"),
+		TEXT("Luck")
+	};
+
+	FAssetToolsModule& AssetTools =
+		FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools");
+
+	for (int32 i = 0; i < 6; ++i)
+	{
+		const FString AssetName = FString::Printf(
+			TEXT("Curve_%s_%s"),
+			*ClassName,
+			StatNames[i]
+		);
+
+		UPackage* Package = CreatePackage(
+			*(CurveAssetFolder / AssetName)
+		);
+
+		UCurveFloat* Curve = NewObject<UCurveFloat>(
+			Package,
+			UCurveFloat::StaticClass(),
+			*AssetName,
+			RF_Public | RF_Standalone
+		);
+
+		Curve->FloatCurve.AddKey(1.0f, 10.0f);
+		Curve->FloatCurve.AddKey(50.0f, 100.0f);
+		Curve->FloatCurve.AddKey(99.0f, 250.0f);
+
+		FAssetRegistryModule::AssetCreated(Curve);
+		Package->MarkPackageDirty();
+
+		ClassData.BaseStats[i] = Curve;
+	}
+
+	// XP curve
+	const FString XPAssetName = FString::Printf(
+		TEXT("Curve_%s_XP"),
+		*ClassName
+	);
+
+	UPackage* XPPackage = CreatePackage(
+		*(CurveAssetFolder / XPAssetName)
+	);
+
+	UCurveFloat* XPCurve = NewObject<UCurveFloat>(
+		XPPackage,
+		UCurveFloat::StaticClass(),
+		*XPAssetName,
+		RF_Public | RF_Standalone
+	);
+
+	XPCurve->FloatCurve.AddKey(1.0f, 50.0f);
+	XPCurve->FloatCurve.AddKey(50.0f, 1000.0f);
+	XPCurve->FloatCurve.AddKey(99.0f, 5000.0f);
+
+	FAssetRegistryModule::AssetCreated(XPCurve);
+	XPPackage->MarkPackageDirty();
+
+	ClassData.XPGain = XPCurve;
+}
+
+#endif*/
