@@ -13,3 +13,12 @@ enum class EBaseStat : uint8
 	Cunning UMETA(DisplayName = "Cunning"),
 	Luck UMETA(DisplayName = "Luck")
 };
+
+UENUM(BlueprintType)
+enum class EControlMode : uint8
+{
+	Field UMETA(DisplayName = "Field Controls"),
+	Combat UMETA(DisplayName = "Combat Controls"),
+	UI UMETA(DisplayName = "UI Controls"),
+	None UMETA(DisplayName = "None")
+};

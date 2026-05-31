@@ -25,7 +25,7 @@ public:
 public:
 	void SetName(FText InName) { Name = InName; }
 	void SetText(FText InText) { Text = InText; }
-	virtual void Execute(APlayerController* Player, AMapEventActor* MapEventActor);
+	//virtual void Execute(APlayerController* Player, AMapEventActor* MapEventActor);
 
 	bool IsUINeeded() { return true; }
 
@@ -39,4 +39,8 @@ public:
 		return FText::FromString(TEXT("Show Text"));
 	}*/
 
+	virtual ERPGCommandResult Execute_Implementation(ARPGTouchTrigger* Trigger, ARPGFieldCharacter* InstigatorActor);
+
+private:
+    UUserWidget* GetMessageWidget(ARPGFieldCharacter* InstigatorActor) const;
 };

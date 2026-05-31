@@ -2,11 +2,12 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Interface/MessageInterface.h"
 
 #include "RPGMessageWidget.generated.h"
 
 UCLASS(Abstract, Blueprintable)
-class RPGSYSTEM_API URPGMessageWidget : public UUserWidget
+class RPGSYSTEM_API URPGMessageWidget : public UUserWidget, public IMessageInterface
 {
 	GENERATED_BODY()
 

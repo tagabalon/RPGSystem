@@ -1,5 +1,8 @@
 #include "Gameplay/RPGPlayerController.h"
 
+#include "Actors/RPGFieldCharacter.h"
+#include "Data/RPGTypes.h"
+#include "RPGConstants.h"
 #include "RPGSettings.h"
 
 #include "EnhancedInputComponent.h"
@@ -7,24 +10,21 @@
 #include "InputAction.h"
 //#include "RPGFieldPartyManager.h"
 
+ARPGPlayerController::ARPGPlayerController()
+{
+	PrimaryActorTick.bCanEverTick = true;
+
+	FieldInputMappingContext = Cast<UInputMappingContext>(FieldInputsMappingPath.TryLoad());
+	InputInteract = Cast<UInputAction>(InputInteractAssetPath.TryLoad());
+
+    UIInputMappingContext = Cast<UInputMappingContext>(UIInputsMappingPath.TryLoad());
+
+}
+
 void ARPGPlayerController::BeginPlay()
 {
 	Super::BeginPlay();
-
-	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
-	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
-			LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
-		{
-			if (const URPGSettings* RPGSettings = GetDefault<URPGSettings>())
-			{
-				if (RPGSettings->InputMapping)
-				{
-					Subsystem->AddMappingContext(RPGSettings->InputMapping.LoadSynchronous(), FieldMappingPriority);
-				}
-			}
-		}
-	}
+	UE_LOG(LogTemp, Warning, TEXT("BeginPlay: %s ControllerClass=%s IsLocal=%d"), *GetNameSafe(this), *GetNameSafe(GetClass()), IsLocalController());
 
 	bShowMouseCursor = false;
 	SetInputMode(FInputModeGameOnly());
@@ -34,24 +34,43 @@ void ARPGPlayerController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
 
-	UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(InputComponent);
+	const URPGSettings* RPGSettings = GetDefault<URPGSettings>();
+	if (!RPGSettings)
+	{
+		return;
+	}		
 
+	if (RPGSettings->InputMappingFieldControls)
+	{
+		FieldInputMappingContext = Cast<UInputMappingContext>(RPGSettings->InputMappingFieldControls.LoadSynchronous());
+	}
+
+	if (RPGSettings->InputMappingUIControls)
+	{
+		UIInputMappingContext = Cast<UInputMappingContext>(RPGSettings->InputMappingUIControls.LoadSynchronous());
+	}
+	
+	if (RPGSettings->InputInteract)
+	{
+		InputInteract = Cast<UInputAction>(RPGSettings->InputInteract.LoadSynchronous());
+	}
+
+	UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(InputComponent);
 	if (!EnhancedInput)
 	{
 		return;
 	}
-
-	if (InteractAction)
+	
+	if (InputInteract)
 	{
-		EnhancedInput->BindAction(
-			InteractAction,
-			ETriggerEvent::Started,
-			this,
-			&ARPGPlayerController::HandleInteract
-		);
+		EnhancedInput->BindAction(InputInteract, ETriggerEvent::Started, this, &ARPGPlayerController::HandleInteract);
 	}
 
-	if (SwapLeaderAction)
+    SetControlMode(EControlMode::Field);
+
+	
+
+	/*if (SwapLeaderAction)
 	{
 		EnhancedInput->BindAction(
 			SwapLeaderAction,
@@ -59,17 +78,7 @@ void ARPGPlayerController::SetupInputComponent()
 			this,
 			&ARPGPlayerController::HandleSwapLeader
 		);
-	}
-
-	if (PauseAction)
-	{
-		EnhancedInput->BindAction(
-			PauseAction,
-			ETriggerEvent::Started,
-			this,
-			&ARPGPlayerController::HandlePause
-		);
-	}
+	}*/
 }
 
 void ARPGPlayerController::DebugInputState()
@@ -86,7 +95,7 @@ void ARPGPlayerController::DebugInputState()
 	{
 		if (auto* Subsystem = LP->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
 		{
-			TArray<FKey> Keys = Subsystem->QueryKeysMappedToAction(InteractAction);
+			TArray<FKey> Keys = Subsystem->QueryKeysMappedToAction(InputInteract);
 
 			for (const FKey& Key : Keys)
 			{
@@ -135,6 +144,11 @@ bool ARPGPlayerController::GetKeyForInputAction(const UInputAction* InputAction,
 
 void ARPGPlayerController::HandleInteract()
 {
+	if (GEngine)
+	{
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Interact pressed"));
+	}
+
 	APawn* ControlledPawn = GetPawn();
 	if (!ControlledPawn)
 	{
@@ -149,11 +163,65 @@ void ARPGPlayerController::HandleInteract()
 
 	// Simpler route for now:
 	// Cast to your ARPGFieldCharacter and call Interact().
-	// ARPGFieldCharacter* FieldCharacter = Cast<ARPGFieldCharacter>(ControlledPawn);
-	// if (FieldCharacter)
-	// {
-	//     FieldCharacter->Interact();
-	// }
+	 ARPGFieldCharacter* FieldCharacter = Cast<ARPGFieldCharacter>(ControlledPawn);
+	 if (FieldCharacter)
+	 {
+	     FieldCharacter->InputActionInteract();
+	 }
+}
+
+void ARPGPlayerController::SetControlMode(EControlMode ControlMode)
+{
+	if (ActiveControlMode == ControlMode)
+	{
+		return;
+	}
+
+	const URPGSettings* RPGSettings = GetDefault<URPGSettings>();
+	if (!RPGSettings)
+	{
+		return;
+    }
+
+	UEnhancedInputComponent* EnhancedInput = Cast<UEnhancedInputComponent>(InputComponent);
+	if (!EnhancedInput)
+	{
+		return;
+	}
+	
+	if (ULocalPlayer* LocalPlayer = GetLocalPlayer())
+	{
+		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = LocalPlayer->GetSubsystem<UEnhancedInputLocalPlayerSubsystem>())
+		{
+			if (CurrentInputMappingContext)
+			{
+				Subsystem->RemoveMappingContext(CurrentInputMappingContext);
+			}
+
+			switch (ControlMode)
+			{
+			case EControlMode::Field:
+				// Set field control input mapping context
+				Subsystem->AddMappingContext(FieldInputMappingContext, 0);
+				CurrentInputMappingContext = FieldInputMappingContext;
+                break;
+            case EControlMode::UI:
+                // Set UI control input mapping context
+                Subsystem->AddMappingContext(UIInputMappingContext, 0);
+                CurrentInputMappingContext = UIInputMappingContext;
+                break;
+			}
+		}
+	}
+}
+
+ARPGPlayerController* ARPGPlayerController::GetPlayerController(UObject* WorldContextObject)
+{
+	if (UWorld* World = GEngine->GetWorldFromContextObject(WorldContextObject, EGetWorldErrorMode::LogAndReturnNull))
+	{
+		return Cast<ARPGPlayerController>(World->GetFirstPlayerController());
+	}
+    return nullptr;
 }
 
 void ARPGPlayerController::HandleSwapLeader()

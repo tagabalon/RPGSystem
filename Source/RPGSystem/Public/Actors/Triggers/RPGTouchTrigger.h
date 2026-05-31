@@ -8,9 +8,8 @@
 
 class USphereComponent;
 class UWidgetComponent;
-class URPGPromptWidget;
-//class URPGTriggerData;
-//class ARPGPlayerCharacter;
+class URPGInteractWidget;
+class ARPGFieldCharacter;
 
 UCLASS()
 class RPGSYSTEM_API ARPGTouchTrigger : public AActor
@@ -28,7 +27,7 @@ protected:
 	TObjectPtr<USphereComponent> TriggerSphere;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
-	TObjectPtr<UWidgetComponent> PromptWidget;
+	TObjectPtr<UWidgetComponent> WidgetComponent;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
 	TObjectPtr<URPGTriggerData> TriggerData;
@@ -55,7 +54,7 @@ protected:
 	bool bThreadFinished = false;
 
 	UPROPERTY()
-	TObjectPtr<AActor> PendingTriggeringActor;
+	TObjectPtr<ARPGFieldCharacter> TriggeringActor;
 
 	UFUNCTION()
 	void OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor, 
@@ -81,7 +80,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintCallable, Category = "Trigger")
-	void Interact(AActor* InstigatorActor);
+	void Interact(ARPGFieldCharacter* InstigatorActor);
 
 	UFUNCTION(BlueprintCallable, Category = "Trigger")
 	void Prompt(AActor* InstigatorActor);
@@ -104,9 +103,9 @@ public:
 
 private:
 	TObjectPtr<USphereComponent> CreateTriggerSphere();
-	TObjectPtr<UWidgetComponent> CreateInteractPrompt();
+	TObjectPtr<UWidgetComponent> CreateInteractWidget();
 
-    TObjectPtr<URPGPromptWidget> GetInteractPromptWidget() const;
+	TObjectPtr<URPGInteractWidget> InteractWidget;
 
 	bool bIsInProximity = false;
 	bool bRunning = false;

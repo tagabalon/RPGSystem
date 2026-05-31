@@ -1,12 +1,15 @@
 #include "Actors/Triggers/RPGTouchTrigger.h"
 
-#include "Components/SphereComponent.h"
-#include "Components/WidgetComponent.h"
+#include "Actors/RPGFieldCharacter.h"
 #include "Gameplay/RPGTriggerRunnerSubsystem.h"
-#include "Kismet/KismetSystemLibrary.h"
-#include "Kismet/GameplayStatics.h"
 #include "RPGGameInstance.h"
 #include "RPGSettings.h"
+
+#include "Components/SphereComponent.h"
+#include "Components/WidgetComponent.h"
+#include "Kismet/KismetSystemLibrary.h"
+#include "Kismet/GameplayStatics.h"
+
 
 #if WITH_EDITOR
 #include "AssetToolsModule.h"
@@ -20,7 +23,7 @@ ARPGTouchTrigger::ARPGTouchTrigger()
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
 	CreateTriggerSphere();
-    CreateInteractPrompt();
+	CreateInteractWidget();
 }
 
 void ARPGTouchTrigger::BeginPlay()
@@ -36,10 +39,13 @@ void ARPGTouchTrigger::BeginPlay()
 		return;
 	}
 
-	if (TObjectPtr<URPGPromptWidget> Prompt = GetInteractPromptWidget())
+	if (WidgetComponent)
 	{
-        Prompt->HidePrompt();
+		InteractWidget = Cast<URPGInteractWidget>(WidgetComponent->GetUserWidgetObject());
+
+		UnPrompt();
 	}
+
 	bIsInProximity = false;
     bPrompted = false;
 
@@ -72,11 +78,11 @@ TObjectPtr<USphereComponent> ARPGTouchTrigger::CreateTriggerSphere()
 	return TriggerSphere;
 }
 
-TObjectPtr<UWidgetComponent> ARPGTouchTrigger::CreateInteractPrompt()
+TObjectPtr<UWidgetComponent> ARPGTouchTrigger::CreateInteractWidget()
 {
 	if (const URPGSettings* RPGSettings = GetDefault<URPGSettings>())
 	{
-		if (RPGSettings->PromptWidgetAsset.IsNull())
+		if (RPGSettings->InteractWidgetAsset.IsNull())
 		{
 			UE_LOG(
 				LogTemp,
@@ -87,20 +93,39 @@ TObjectPtr<UWidgetComponent> ARPGTouchTrigger::CreateInteractPrompt()
 			return nullptr;
 		}
 
-		PromptWidget = CreateDefaultSubobject<UWidgetComponent>(TEXT("TriggerPrompt"));
+		WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("TriggerPrompt"));
 
-		PromptWidget->SetupAttachment(RootComponent);
-		PromptWidget->SetWidgetSpace(EWidgetSpace::Screen);
-		PromptWidget->SetDrawSize(FVector2D(140.f, 100.0f));
-		PromptWidget->SetWorldLocation(GetActorLocation());
+		WidgetComponent->SetupAttachment(RootComponent);
+		WidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+		WidgetComponent->SetDrawSize(FVector2D(140.f, 100.0f));
+		WidgetComponent->SetWorldLocation(GetActorLocation());
 
-		if (UClass* WidgetClass = RPGSettings->PromptWidgetAsset.LoadSynchronous())
+		if (UClass* WidgetClass = RPGSettings->InteractWidgetAsset.LoadSynchronous())
 		{
-			PromptWidget->SetWidgetClass(WidgetClass);
+			if(WidgetClass->ImplementsInterface(UInteractInterface::StaticClass()))
+			{
+				WidgetComponent->SetWidgetClass(WidgetClass);
+			}
+			else
+			{
+				UE_LOG(
+					LogTemp,
+					Error,
+					TEXT("%s: InteractWidget class from URPGSettings does not implement UInteractInterface."),
+					*GetName()
+				);
+
+				static ConstructorHelpers::FClassFinder<UUserWidget> DefaultWidgetAsset(TEXT("/RPGSystem/WBP_DefaultInteractWidget.WBP_DefaultInteractWidget"));
+
+				if (DefaultWidgetAsset.Succeeded())
+				{
+					WidgetComponent->SetWidgetClass(DefaultWidgetAsset.Class);
+				}
+            }
 		}
 	}
 
-	return PromptWidget;
+	return WidgetComponent;
 }
 
 void ARPGTouchTrigger::Tick(float DeltaSeconds)
@@ -117,10 +142,10 @@ void ARPGTouchTrigger::Tick(float DeltaSeconds)
 
 	if (bIsInProximity && !bPrompted)
 	{
-		float squareDistance = (GetActorLocation() - PendingTriggeringActor->GetActorLocation()).SquaredLength();
-		if (IsPromptable(PendingTriggeringActor))
+		float squareDistance = (GetActorLocation() - TriggeringActor->GetActorLocation()).SquaredLength();
+		if (IsPromptable(TriggeringActor))
 		{
-            Prompt(PendingTriggeringActor);
+            Prompt(TriggeringActor);
 		}
 		else
 		{
@@ -129,24 +154,21 @@ void ARPGTouchTrigger::Tick(float DeltaSeconds)
 	}
 }
 
-void ARPGTouchTrigger::OnTriggerBeginOverlap(
-	UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex,
-	bool bFromSweep,
-	const FHitResult& SweepResult
+void ARPGTouchTrigger::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp,	int32 OtherBodyIndex,
+	bool bFromSweep, const FHitResult& SweepResult
 )
 {
-	/*if (!OtherActor || !TriggerData || bThreadRunning)
+	if (GEngine)
 	{
-		return;
-	}*/
+		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Being overlap!"));
+	}
 
-	/*if (!OtherActor->ActorHasTag(TEXT("Player")))
+    ARPGFieldCharacter* OverlappingCharacter = Cast<ARPGFieldCharacter>(OtherActor);
+	if (!OverlappingCharacter)
 	{
 		return;
-	}*/
+	}
 
 	UE_LOG(LogTemp, Verbose, TEXT("CheckRequirements"));
 	if (CheckRequirements())
@@ -154,30 +176,24 @@ void ARPGTouchTrigger::OnTriggerBeginOverlap(
 		if (bPromptForAction)
 		{
 			bIsInProximity = true;
-            PendingTriggeringActor = OtherActor;
+			TriggeringActor = OverlappingCharacter;
 			SetActorTickEnabled(true);
 
 			UE_LOG(LogTemp, Verbose, TEXT("Player entered proximity of %s."), *GetName());
 		}
 		else
 		{
-			Interact(OtherActor);
+			Interact(OverlappingCharacter);
 		}
-	}
-	else if (!bPromptForAction)
-	{
-		PendingTriggeringActor = OtherActor;
 	}
 }
 
-void ARPGTouchTrigger::OnTriggerEndOverlap(
-	UPrimitiveComponent* OverlappedComponent,
-	AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,
-	int32 OtherBodyIndex
+void ARPGTouchTrigger::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex
 )
 {
-	if (!OtherActor/* || !OtherActor->ActorHasTag(TEXT("Player"))*/)
+	ARPGFieldCharacter* OverlappingCharacter = Cast<ARPGFieldCharacter>(OtherActor);
+	if (!OverlappingCharacter)
 	{
 		return;
 	}
@@ -187,9 +203,9 @@ void ARPGTouchTrigger::OnTriggerEndOverlap(
 		UnPrompt();
 	}
 
-	if (PendingTriggeringActor == OtherActor)
+	if (TriggeringActor == OverlappingCharacter)
 	{
-		PendingTriggeringActor = nullptr;
+		TriggeringActor = nullptr;
 	}
 
 	bIsInProximity = false;
@@ -224,7 +240,7 @@ bool ARPGTouchTrigger::IsPromptable(const AActor* Actor) const
 {
 	if (Actor)
 	{
-		float squareDistance = (GetActorLocation() - PendingTriggeringActor->GetActorLocation()).SquaredLength();
+		float squareDistance = (GetActorLocation() - TriggeringActor->GetActorLocation()).SquaredLength();
 		if (squareDistance < PromptDistance * PromptDistance)
 		{
 
@@ -240,52 +256,39 @@ bool ARPGTouchTrigger::IsPromptable(const AActor* Actor) const
     return false;
 }
 
-TObjectPtr<URPGPromptWidget> ARPGTouchTrigger::GetInteractPromptWidget() const
-{
-	if (PromptWidget)
-	{
-		return Cast<URPGPromptWidget>(PromptWidget->GetUserWidgetObject());
-	}
-	return nullptr;
-}
-
 void ARPGTouchTrigger::Prompt(AActor* InstigatorActor)
 {
-	/*if (!InstigatorActor)
+	if (InteractWidget)
 	{
-		return;
-	}*/
+        IInteractInterface::Execute_ShowInteract(InteractWidget, PromptText.ToString());
 
-	if (TObjectPtr<URPGPromptWidget> Prompt = GetInteractPromptWidget())
-	{
-        Prompt->SetPromptText(PromptText);
-        Prompt->ShowPrompt();
+		if (TriggeringActor == InstigatorActor)
+		{
+            TriggeringActor->SetInteractableTrigger(this);
+		}
+
+		bPrompted = true;
 	}
 
-	// TODO:
-	// Replace with your UI subsystem / HUD call.
-	// Example:
-	// URPGUISubsystem::Get(this)->ShowPrompt(PromptText, this);
-
-	bPrompted = true;
 }
 
 void ARPGTouchTrigger::UnPrompt()
 {
-	// TODO:
-	// Replace with your UI subsystem / HUD call.
-	// URPGUISubsystem::Get(this)->HidePrompt();
-
-	if (TObjectPtr<URPGPromptWidget> Prompt = GetInteractPromptWidget())
+	if (InteractWidget)
 	{
-		Prompt->HidePrompt();
+		IInteractInterface::Execute_HideInteract(InteractWidget);
+	}
+
+	if (TriggeringActor)
+	{
+		TriggeringActor->SetInteractableTrigger(nullptr);
 	}
 	bPrompted = false;
 }
 
-void ARPGTouchTrigger::Interact(AActor* InstigatorActor)
+void ARPGTouchTrigger::Interact(ARPGFieldCharacter* InstigatorActor)
 {
-	if (!TriggerData || bThreadRunning)
+	if (!TriggerData || bThreadRunning || InstigatorActor != TriggeringActor)
 	{
 		return;
 	}
@@ -308,7 +311,7 @@ void ARPGTouchTrigger::Interact(AActor* InstigatorActor)
 		return;
 	}
 
-	const bool bStarted = TriggerRunner->RunTrigger(this, InstigatorActor);
+	const bool bStarted = TriggerRunner->RunTrigger(this, InstigatorActor);	
 
 	bRunning = bStarted;
 }
@@ -351,9 +354,7 @@ void ARPGTouchTrigger::SetTriggerActive(bool bActive)
 		return;
 	}
 
-	TriggerSphere->SetCollisionEnabled(
-		bActive ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision
-	);
+	TriggerSphere->SetCollisionEnabled(bActive ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 
 	TriggerSphere->SetGenerateOverlapEvents(bActive);
 	PrimaryActorTick.bCanEverTick = bActive;

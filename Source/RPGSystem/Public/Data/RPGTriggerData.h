@@ -2,7 +2,7 @@
 
 #include "CoreMinimal.h"
 
-#include "Data/Commands/RPGCommand.h"
+#include "Commands/RPGCommand.h"
 #include "RPGTriggerData.generated.h"
 
 class URPGCommand;

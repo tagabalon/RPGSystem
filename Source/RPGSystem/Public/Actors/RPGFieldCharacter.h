@@ -5,6 +5,8 @@
 
 #include "RPGFieldCharacter.generated.h"
 
+class ARPGTouchTrigger;
+class UAudioComponent;
 class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;
@@ -24,11 +26,21 @@ class RPGSYSTEM_API ARPGFieldCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UCameraComponent* FollowCamera;
 
+	/** Audio */
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
+	UAudioComponent* Audio;
+
+
 public:
 	ARPGFieldCharacter();
 
     void SetPartyMemberData(TWeakPtr<FRPGPartyMember> InPartyMemberData) { PartyMemberData = InPartyMemberData; }
+	
+	UFUNCTION(BlueprintCallable, Category = "Trigger")
+	void SetInteractableTrigger(ARPGTouchTrigger* InteractableTrigger);
 
+	UFUNCTION()
+	void InputActionInteract();
 protected:
 	//ACharacter
 	virtual void BeginPlay() override;
@@ -43,21 +55,11 @@ protected:
 
 	TWeakPtr<FRPGPartyMember> PartyMemberData;
 
-	/*UPROPERTY(EditDefaultsOnly, Category = "RPG Input")
-	UInputMappingContext* InputMapping;*/
-
-	UPROPERTY(EditDefaultsOnly, Category = "RPG Input")
-	UInputAction* InputCamera;
-
-	UPROPERTY(EditDefaultsOnly, Category = "RPG Input")
-	UInputAction* InputMove;
-
-	UPROPERTY(EditDefaultsOnly, Category = "RPG Input")
-	UInputAction* InputInteract;
-
 	UFUNCTION()
 	void InputActionMove(const FInputActionValue& Value);
 
 	UFUNCTION()
 	void InputActionCamera(const FInputActionValue& Value);
+
+	ARPGTouchTrigger* InteractableTrigger;
 };

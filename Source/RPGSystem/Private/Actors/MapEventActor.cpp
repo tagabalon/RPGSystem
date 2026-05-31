@@ -99,7 +99,7 @@ void AMapEventActor::Tick(float DeltaTime)
 	{
 		if (CharacterCanBePrompted())
 		{
-			IInteractInterface::Execute_ShowPrompt(InteractWidget);
+			IInteractInterface::Execute_ShowInteract(InteractWidget, "Interact");
 			//GlintedCharacter->SetInteractable(this);
 			bIsCharacterPrompted = true;
 		}

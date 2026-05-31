@@ -1,10 +1,13 @@
 #pragma once
 
 #include "Engine/DeveloperSettings.h"
+
+#include "InputAction.h"
 #include "Templates/SubclassOf.h"
-#include "UObject/SoftObjectPath.h"
-#include "UI/RPGPromptWidget.h"
+#include "UI/RPGHUD.h"
+#include "UI/RPGInteractWidget.h"
 #include "UI/RPGMessageWidget.h"
+#include "UObject/SoftObjectPath.h"
 
 #include "RPGSettings.generated.h"
 
@@ -28,13 +31,38 @@ public:
 	TSoftObjectPtr<URPGDatabase> GameDatabaseAsset;
 
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "UI")
-	TSoftClassPtr<URPGPromptWidget> PromptWidgetAsset;
+	TSoftClassPtr<URPGInteractWidget> InteractWidgetAsset;
 
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "UI")
-	TSoftClassPtr<URPGMessageWidget> MessageWidgetAsset;
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "UI|Classes", meta = (MetaClass = "/Script/Engine.HUD"))
+	FSoftClassPath RPGHUDClass;
 
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Input")
-	TSoftObjectPtr<UInputMappingContext> InputMapping;
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
+	TSoftObjectPtr<UInputMappingContext> InputMappingFieldControls;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
+	TSoftObjectPtr<UInputAction> InputMove;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
+	TSoftObjectPtr<UInputAction> InputCamera;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
+	TSoftObjectPtr<UInputAction> InputInteract;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
+	TSoftObjectPtr<UInputAction> InputOpenMenu;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "UI Input")
+	TSoftObjectPtr<UInputMappingContext> InputMappingUIControls;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
+	TSoftObjectPtr<UInputAction> InputDirectional;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
+	TSoftObjectPtr<UInputAction> InputAccept;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
+	TSoftObjectPtr<UInputAction> InputBack;
+ 
 
 #if WITH_EDITOR
 	// Called when any property is changed in the settings UI

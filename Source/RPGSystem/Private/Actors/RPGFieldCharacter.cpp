@@ -1,5 +1,7 @@
 #include "Actors/RPGFieldCharacter.h"
 
+#include "Actors/Triggers/RPGTouchTrigger.h"
+#include "RPGConstants.h"
 #include "RPGSettings.h"
 
 #include "Camera/CameraComponent.h"
@@ -47,6 +49,8 @@ ARPGFieldCharacter::ARPGFieldCharacter()
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName); // Attach the camera to the end of the boom and let the boom adjust to match the controller orientation
 	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+
+    Audio = CreateDefaultSubobject<UAudioComponent>(TEXT("Audio"));
 }
 
 void ARPGFieldCharacter::BeginPlay()
@@ -58,19 +62,23 @@ void ARPGFieldCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-	// Add Input Mapping Context
-	if (APlayerController* PlayerController = Cast<APlayerController>(GetController()))
+	UInputAction* InputMove = Cast<UInputAction>(InputMoveAssetPath.TryLoad());
+    UInputAction* InputCamera = Cast<UInputAction>(InputCameraAssetPath.TryLoad());
+    
+	if (const URPGSettings* RPGSettings = GetDefault<URPGSettings>())
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (RPGSettings->InputMove)
 		{
-			if (const URPGSettings* RPGSettings = GetDefault<URPGSettings>())
-			{
-				if (RPGSettings->InputMapping)
-				{
-					Subsystem->AddMappingContext(RPGSettings->InputMapping.LoadSynchronous(), 0);
-				}
-			}
+			InputMove = Cast<UInputAction>(RPGSettings->InputMove.LoadSynchronous());
+        }
+		if (RPGSettings->InputCamera)
+		{
+			InputCamera = Cast<UInputAction>(RPGSettings->InputCamera.LoadSynchronous());
 		}
+		/*if (RPGSettings->InputInteract)
+		{
+            InputInteract = Cast<UInputAction>(RPGSettings->InputInteract.LoadSynchronous());
+		}*/
 	}
 
 	if (UEnhancedInputComponent* Input = Cast<UEnhancedInputComponent>(PlayerInputComponent))
@@ -84,12 +92,12 @@ void ARPGFieldCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 		{
 			Input->BindAction(InputMove, ETriggerEvent::Triggered, this, &ARPGFieldCharacter::InputActionMove);
 		}
-
-		/*if (InputInteract != nullptr)
-		{
-			Input->BindAction(InputInteract, ETriggerEvent::Started, this, &ARPGPlayerCharacter::Interact);
-		}*/
 	}
+}
+
+void ARPGFieldCharacter::SetInteractableTrigger(ARPGTouchTrigger* Trigger)
+{
+	InteractableTrigger = Trigger;
 }
 
 void ARPGFieldCharacter::Move(FVector2D MovementVector)
@@ -130,4 +138,12 @@ void ARPGFieldCharacter::InputActionMove(const FInputActionValue& Value)
 void ARPGFieldCharacter::InputActionCamera(const FInputActionValue& Value)
 {
     Look(Value.Get<FVector2D>());
+}
+
+void ARPGFieldCharacter::InputActionInteract()
+{
+	if (InteractableTrigger)
+	{
+		InteractableTrigger->Interact(this);
+    }
 }

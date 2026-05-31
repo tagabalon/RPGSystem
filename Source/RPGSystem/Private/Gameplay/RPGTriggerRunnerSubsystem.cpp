@@ -1,10 +1,11 @@
 #include "Gameplay/RPGTriggerRunnerSubsystem.h"
 
-#include "Data/Commands/RPGCommand.h"
+#include "Commands/RPGCommand.h"
 #include "Data/RPGTriggerData.h"
+#include "Actors/RPGFieldCharacter.h"
 #include "Actors/Triggers/RPGTouchTrigger.h"
 
-bool URPGTriggerRunnerSubsystem::RunTrigger(ARPGTouchTrigger* Trigger, AActor* InstigatorActor)
+bool URPGTriggerRunnerSubsystem::RunTrigger(ARPGTouchTrigger* Trigger, ARPGFieldCharacter* InstigatorActor)
 {
 	if (bIsRunning || !Trigger)
 	{
@@ -52,11 +53,7 @@ void URPGTriggerRunnerSubsystem::ExecuteNextCommand()
 			continue;
 		}
 
-		const ERPGCommandResult Result =
-			Command->Execute(
-				CurrentContext.Trigger,
-				CurrentContext.InstigatorActor
-			);
+		const ERPGCommandResult Result = Command->Execute(CurrentContext.Trigger, CurrentContext.InstigatorActor);
 
 		switch (Result)
 		{
@@ -64,6 +61,7 @@ void URPGTriggerRunnerSubsystem::ExecuteNextCommand()
 			continue;
 
 		case ERPGCommandResult::Wait:
+			WaitingCommand = Command;
 			return;
 
 		case ERPGCommandResult::Finish:
@@ -81,6 +79,18 @@ void URPGTriggerRunnerSubsystem::ExecuteNextCommand()
 
 void URPGTriggerRunnerSubsystem::ContinueTrigger()
 {
+	if (WaitingCommand)
+	{
+		const ERPGCommandResult Result = WaitingCommand->Continue();
+
+		if (Result == ERPGCommandResult::Wait)
+		{
+			return;
+		}
+
+		WaitingCommand = nullptr;
+	}
+
 	ExecuteNextCommand();
 }
 

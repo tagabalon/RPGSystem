@@ -26,7 +26,7 @@ public:
 	void ShowGlint();
 	
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Interact")
-	void ShowPrompt();
+	void ShowInteract(const FString& InteractText);
 
 	UFUNCTION(BlueprintCallable, BlueprintImplementableEvent, Category = "Interact")
 	void HideInteract();

@@ -6,6 +6,7 @@
 
 class URPGTriggerData;
 class URPGCommand;
+class ARPGFieldCharacter;
 class ARPGTouchTrigger;
 
 USTRUCT()
@@ -17,7 +18,7 @@ struct FRPGTriggerExecutionContext
 	TObjectPtr<ARPGTouchTrigger> Trigger = nullptr;
 
 	UPROPERTY()
-	TObjectPtr<AActor> InstigatorActor = nullptr;
+	TObjectPtr<ARPGFieldCharacter> InstigatorActor = nullptr;
 
 	UPROPERTY()
 	TArray<TObjectPtr<URPGCommand>> Commands;
@@ -32,7 +33,7 @@ class RPGSYSTEM_API URPGTriggerRunnerSubsystem : public UGameInstanceSubsystem
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "RPG|Triggers")
-	bool RunTrigger(ARPGTouchTrigger* Trigger, AActor* InstigatorActor);
+	bool RunTrigger(ARPGTouchTrigger* Trigger, ARPGFieldCharacter* InstigatorActor);
 
 	UFUNCTION(BlueprintCallable, Category = "RPG|Events")
 	void ContinueTrigger();
@@ -44,6 +45,8 @@ public:
 	bool IsRunningTrigger() const { return bIsRunning; }
 
 private:
+	UPROPERTY()
+	TObjectPtr<URPGCommand> WaitingCommand;
 
 	UPROPERTY()
 	FRPGTriggerExecutionContext CurrentContext;

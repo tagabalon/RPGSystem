@@ -1,5 +1,5 @@
 #include "CoreMinimal.h"
-#include "Engine/PrimaryDataAsset.h"
+
 #include "RPGConvoAsset.generated.h"
 
 class UTexture2D;
@@ -11,7 +11,7 @@ struct FRPGConvoLine
 	GENERATED_BODY()
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue")
-	FName ActorId;
+	FName CharacterId;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Dialogue")
 	FText Speaker;
@@ -30,7 +30,7 @@ struct FRPGConvoLine
 
 	bool UsesActorSpeaker() const
 	{
-		return !ActorId.IsNone();
+		return !CharacterId.IsNone();
 	}
 };
 

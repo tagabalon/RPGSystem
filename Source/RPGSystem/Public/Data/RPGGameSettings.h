@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "Data/RPGDatabase.h"
+#include "RPGConstants.h"
 
 #include "RPGGameSettings.generated.h"
 
