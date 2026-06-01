@@ -42,4 +42,5 @@ public:
 
 	static const TArray<FName> GetRPGCharacterIds();
 	static const TArray<FName> GetRPGClassIds();
+
 };

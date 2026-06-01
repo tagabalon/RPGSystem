@@ -9,7 +9,7 @@ class URPGConvoAsset;
 struct FRPGConvo;
 
 UCLASS(Blueprintable, Category = "RPG System")
-class UStartConvo : public URPGCommand
+class RPGSYSTEM_API UStartConvo : public URPGCommand
 {
 	GENERATED_BODY()
 
@@ -21,7 +21,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (GetOptions = "GetConvoOptions"), Category = "Dialogue")
 	FName ConvoId;
 
-	virtual ERPGCommandResult Execute_Implementation(ARPGTouchTrigger* Trigger, ARPGFieldCharacter* InstigatorActor) override;
+	virtual ERPGCommandResult Execute_Implementation(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor) override;
 
 	virtual ERPGCommandResult Continue_Implementation() override;
 

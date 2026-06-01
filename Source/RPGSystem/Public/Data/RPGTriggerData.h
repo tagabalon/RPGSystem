@@ -15,10 +15,77 @@ enum class ERPGTriggerFinishAction : uint8
 	Hide
 };
 
+UENUM(BlueprintType)
+enum class ERPGTriggerActivation : uint8
+{
+	InteractButton,
+	PlayerTouch,
+	TriggerTouch,
+	AutuActivate,
+	ParallelRun
+};
+
 USTRUCT(BlueprintType)
 struct FRPGEventChain
 {
 	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	bool HasSwitchACondition = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	FName SwitchAId;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	bool HasSwitchBCondition = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	FName SwitchBId;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	bool HasVariableCondition = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	FName VariableId;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	int32 VariableCheck;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	bool HasSelfSwitchCondition = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	FName SelfSwitchName;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	bool HasItemCondition = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	FName ItemId;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	bool HasCharacterCondition = false;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	FName CharacterId;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
+	TObjectPtr<USkeletalMesh> CharacterMesh;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
+	TObjectPtr<UAnimBlueprint> CharacterAnimation;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Activation")
+	ERPGTriggerActivation TriggerActivation = ERPGTriggerActivation::InteractButton;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Activation")
+	float TriggerRange = 300.0f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
+	ERPGTriggerFinishAction FinishAction = ERPGTriggerFinishAction::None;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
+	bool NoCollide = false;
 
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadWrite, Category = "Events")
 	TArray<TObjectPtr<URPGCommand>> Commands;
@@ -37,13 +104,19 @@ public:
 	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
-	int32 TriggerId = -1;
+	FName TriggerId;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
-	ERPGTriggerFinishAction FinishAction = ERPGTriggerFinishAction::None;
+	FText DisplayName;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Editor")
-	FVector2D GraphPosition = FVector2D::ZeroVector;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
+    FVector WorldPosition = FVector::ZeroVector;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
+    FRotator WorldRotation = FRotator::ZeroRotator;
+		
+	/*UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Editor")
+	FVector2D GraphPosition = FVector2D::ZeroVector;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Events")
 	TArray<FRPGEventChain> States;

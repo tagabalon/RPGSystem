@@ -27,7 +27,7 @@ UUserWidget* UShowText::GetMessageWidget(ARPGFieldCharacter* InstigatorActor) co
     return nullptr;
 }
 
-ERPGCommandResult UShowText::Execute_Implementation(ARPGTouchTrigger* Trigger, ARPGFieldCharacter* InstigatorActor)
+ERPGCommandResult UShowText::Execute_Implementation(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor)
 {
 	UUserWidget* MessageWidget = GetMessageWidget(InstigatorActor);
 	if (!MessageWidget)

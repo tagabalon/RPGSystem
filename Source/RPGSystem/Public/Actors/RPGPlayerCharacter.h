@@ -10,7 +10,6 @@
 class AMapEventActor;
 class UCameraComponent;
 class UInputAction;
-class UInputMappingContext;
 class USpringArmComponent;
 
 /**

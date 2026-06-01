@@ -29,6 +29,8 @@ void URPGProgressionSubsystem::InitializeFromMapScenario(ARPGMapScenario* MapSce
 		return;
 	}
 
+    CurrentScenario = MapScenario;
+
 	UWorld* World = MapScenario->GetWorld();
 	if (World)
 	{
@@ -43,8 +45,6 @@ void URPGProgressionSubsystem::InitializeFromMapScenario(ARPGMapScenario* MapSce
 
 void URPGProgressionSubsystem::SetCurrentScenario(URPGScenario* Scenario)
 {
-	//CurrentScenario = Scenario;
-
 	if (Scenario)
 	{
 		CurrentScenarioId = Scenario->ScenarioId;
@@ -53,4 +53,14 @@ void URPGProgressionSubsystem::SetCurrentScenario(URPGScenario* Scenario)
 	{
 		CurrentScenarioId = NAME_None;
 	}
+}
+
+URPGProgressionSubsystem* URPGProgressionSubsystem::Get(UObject* WorldContextObject)
+{
+	if (!WorldContextObject)
+	{
+		return nullptr;
+	}
+	UGameInstance* GameInstance = UGameplayStatics::GetGameInstance(WorldContextObject);
+    return GameInstance ? GameInstance->GetSubsystem<URPGProgressionSubsystem>() : nullptr;
 }

@@ -7,6 +7,7 @@
 
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "InputMappingContext.h"
 #include "InputAction.h"
 //#include "RPGFieldPartyManager.h"
 
@@ -45,7 +46,7 @@ void ARPGPlayerController::SetupInputComponent()
 		FieldInputMappingContext = Cast<UInputMappingContext>(RPGSettings->InputMappingFieldControls.LoadSynchronous());
 	}
 
-	if (RPGSettings->InputMappingUIControls)
+	//if (RPGSettings->InputMappingUIControls)
 	{
 		UIInputMappingContext = Cast<UInputMappingContext>(RPGSettings->InputMappingUIControls.LoadSynchronous());
 	}

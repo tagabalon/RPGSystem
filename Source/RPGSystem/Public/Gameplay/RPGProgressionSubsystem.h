@@ -7,6 +7,8 @@
 
 #include "RPGProgressionSubsystem.generated.h"
 
+class URPGMapScenario;
+
 USTRUCT(BlueprintType)
 struct FRPGScenarioState
 {
@@ -82,4 +84,10 @@ public:
 
 	UPROPERTY()
 	FDateTime SessionStartTime;
+
+	UPROPERTY(BlueprintReadWrite)
+	TObjectPtr<ARPGMapScenario> CurrentScenario;
+
+    static URPGProgressionSubsystem* Get(UObject* WorldContextObject);
+
 };

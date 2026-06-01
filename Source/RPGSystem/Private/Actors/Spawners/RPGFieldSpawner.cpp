@@ -6,6 +6,7 @@
 #include "Data/RPGScenario.h"
 #include "Gameplay/RPGPartySubsystem.h"
 #include "Level/RPGMapScenario.h"
+#include "RPGSettings.h"
 
 //#include "AIController.h"
 #include "EngineUtils.h"
@@ -14,6 +15,11 @@
 ARPGFieldSpawner::ARPGFieldSpawner()
 {
 	PrimaryActorTick.bCanEverTick = false;
+
+    if (const URPGDatabase* GameDatabase = URPGDatabase::GetRPGDatabase())
+    {
+		CharactersDatabase = GameDatabase->CharactersDatabase.LoadSynchronous();
+	}
 }
 
 void ARPGFieldSpawner::BeginPlay()
@@ -76,21 +82,22 @@ ARPGFieldCharacter* ARPGFieldSpawner::SpawnPartyMember(TSharedPtr<FRPGPartyMembe
 	FVector SpawnLocation = GetActorLocation();
 	FRotator SpawnRotation = GetActorRotation();
 
-	if (PartySpawnPoints.IsValidIndex(PartyIndex) && PartySpawnPoints[PartyIndex])
+	/*if (PartySpawnPoints.IsValidIndex(PartyIndex) && PartySpawnPoints[PartyIndex])
 	{
 		SpawnLocation = PartySpawnPoints[PartyIndex]->GetActorLocation();
 		SpawnRotation = PartySpawnPoints[PartyIndex]->GetActorRotation();
+	}*/
+
+	if (StartingLocation)
+	{
+        SpawnLocation = StartingLocation->GetActorLocation();
+        SpawnRotation = StartingLocation->GetActorRotation();
 	}
 
 	FActorSpawnParameters Params;
 	Params.SpawnCollisionHandlingOverride = ESpawnActorCollisionHandlingMethod::AdjustIfPossibleButAlwaysSpawn;
 
-	ARPGFieldCharacter* SpawnedCharacter = GetWorld()->SpawnActor<ARPGFieldCharacter>(
-			FieldActorClass,
-			SpawnLocation,
-			SpawnRotation,
-			Params
-		);
+	ARPGFieldCharacter* SpawnedCharacter = GetWorld()->SpawnActor<ARPGFieldCharacter>(FieldActorClass, SpawnLocation, SpawnRotation, Params);
 
 	if (!SpawnedCharacter)
 	{
@@ -116,6 +123,11 @@ ARPGFieldCharacter* ARPGFieldSpawner::SpawnPartyMember(TSharedPtr<FRPGPartyMembe
 	SpawnedPartyMembers.Add(PartyMember->CharacterId, SpawnedCharacter);
 
 	return SpawnedCharacter;
+}
+
+void ARPGFieldSpawner::SetStartingLocation(AActor* StartLoc)
+{
+    StartingLocation = StartLoc;
 }
 
 void ARPGFieldSpawner::SetLeader(FName ActorId)
@@ -222,20 +234,36 @@ void ARPGFieldSpawner::ActivateScenarioActors(URPGScenario* RuntimeScenario)
 	{
 		return;
     }
+	TriggerActors.Empty();
 
-	for (TActorIterator<ARPGTouchTrigger> It(GetWorld()); It; ++It)
+	for (TActorIterator<AActor> It(GetWorld()); It; ++It)
 	{
-		ARPGTouchTrigger* Trigger = *It;
-
-		if (!Trigger)
+		AActor* Actor = *It;
+		if (!Actor || !Actor->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
 		{
 			continue;
 		}
 
-		const bool bActive = RuntimeScenario->TriggerList.Contains(Trigger->GetTriggerData());
-
-		Trigger->SetTriggerActive(bActive);
+		const URPGTriggerData* TriggerData = ITriggerInterface::Execute_GetTriggerData(Actor);
+		if (RuntimeScenario->TriggerList.Contains(TriggerData))
+		{
+            TriggerActors.Add(TriggerData->TriggerId, Actor);
+			ITriggerInterface::Execute_EnableTrigger(Actor, true);
+		}
+		else
+		{
+			Actor->Destroy();
+		}
 	}
+}
+
+AActor* ARPGFieldSpawner::GetTriggerActorById(FName TriggerId) const
+{
+	if (TriggerActors.Contains(TriggerId))
+	{
+		return TriggerActors[TriggerId];
+	}
+    return nullptr;
 }
 
 void ARPGFieldSpawner::ClearSpawnedActors()

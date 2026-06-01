@@ -5,8 +5,8 @@
 #include "RPGGameInstance.generated.h"
 
 class URPGDatabase;
-class URPGSaveGame;
 class URPGPartySubsystem;
+class URPGSaveGame;
 
 UCLASS()
 class RPGSYSTEM_API URPGGameInstance : public UGameInstance

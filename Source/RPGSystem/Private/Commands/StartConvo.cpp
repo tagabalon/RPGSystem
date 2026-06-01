@@ -24,7 +24,7 @@ UUserWidget* UStartConvo::GetMessageWidget(ARPGFieldCharacter* InstigatorActor) 
 	return nullptr;
 }
 
-ERPGCommandResult UStartConvo::Execute_Implementation(ARPGTouchTrigger* Trigger, ARPGFieldCharacter* InstigatorActor)
+ERPGCommandResult UStartConvo::Execute_Implementation(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor)
 {
 	MessageWidget = GetMessageWidget(InstigatorActor);
 	if (!MessageWidget)
@@ -40,12 +40,9 @@ ERPGCommandResult UStartConvo::Execute_Implementation(ARPGTouchTrigger* Trigger,
 	if (ARPGPlayerController* Controller = ARPGPlayerController::GetPlayerController(InstigatorActor))
 	{
 		InstigatorActor->DisableInput(Controller);
-
-		FInputModeUIOnly InputModeData;
-		InputModeData.SetLockMouseToViewportBehavior(EMouseLockMode::DoNotLock);
-		InputModeData.SetWidgetToFocus(MessageWidget->GetCachedWidget());
-
 		Controller->SetControlMode(EControlMode::UI);
+
+		Controller->SetViewTargetWithBlend(TriggerActor, 1.0f, EViewTargetBlendFunction::VTBlend_EaseInOut, 2.0f);
 	}
 
 	if (!RuntimeConvo)
@@ -69,13 +66,18 @@ ERPGCommandResult UStartConvo::Continue_Implementation()
 		{
 			if (URPGTriggerRunnerSubsystem* TriggerRunner = GameInstance->GetSubsystem<URPGTriggerRunnerSubsystem>())
 			{
-				TriggerRunner->ContinueTrigger();
+				TriggerRunner->FinishWaiting(this);
 			}
-
 		}
 		IMessageInterface::Execute_CloseMessages(MessageWidget);
 
+		if (ARPGPlayerController* Controller = ARPGPlayerController::GetPlayerController(Instigator))
+		{
+			Instigator->EnableInput(Controller);
+			Controller->SetControlMode(EControlMode::Field);
 
+			Controller->SetViewTargetWithBlend(Instigator, 1.0f, EViewTargetBlendFunction::VTBlend_EaseInOut, 2.0f);
+		}
 
 		return ERPGCommandResult::Continue;
 	}

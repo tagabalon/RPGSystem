@@ -95,9 +95,9 @@ void ARPGFieldCharacter::SetupPlayerInputComponent(class UInputComponent* Player
 	}
 }
 
-void ARPGFieldCharacter::SetInteractableTrigger(ARPGTouchTrigger* Trigger)
+void ARPGFieldCharacter::SetInteractableTrigger(AActor* TriggerActor)
 {
-	InteractableTrigger = Trigger;
+	InteractableTriggerActor = TriggerActor;
 }
 
 void ARPGFieldCharacter::Move(FVector2D MovementVector)
@@ -142,8 +142,8 @@ void ARPGFieldCharacter::InputActionCamera(const FInputActionValue& Value)
 
 void ARPGFieldCharacter::InputActionInteract()
 {
-	if (InteractableTrigger)
+	if (InteractableTriggerActor && InteractableTriggerActor->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
 	{
-		InteractableTrigger->Interact(this);
+		ITriggerInterface::Execute_ExecuteTrigger(InteractableTriggerActor);
     }
 }

@@ -15,7 +15,7 @@ struct FRPGTriggerExecutionContext
 	GENERATED_BODY()
 
 	UPROPERTY()
-	TObjectPtr<ARPGTouchTrigger> Trigger = nullptr;
+	TObjectPtr<AActor> TriggerActor = nullptr;
 
 	UPROPERTY()
 	TObjectPtr<ARPGFieldCharacter> InstigatorActor = nullptr;
@@ -33,7 +33,7 @@ class RPGSYSTEM_API URPGTriggerRunnerSubsystem : public UGameInstanceSubsystem
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "RPG|Triggers")
-	bool RunTrigger(ARPGTouchTrigger* Trigger, ARPGFieldCharacter* InstigatorActor);
+	bool RunTrigger(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor);
 
 	UFUNCTION(BlueprintCallable, Category = "RPG|Events")
 	void ContinueTrigger();
@@ -43,6 +43,9 @@ public:
 
 	UFUNCTION(BlueprintPure, Category = "RPG|Events")
 	bool IsRunningTrigger() const { return bIsRunning; }
+
+	UFUNCTION(BlueprintCallable, Category = "RPG|Events")
+	void FinishWaiting(URPGCommand* PendingCommand);
 
 private:
 	UPROPERTY()

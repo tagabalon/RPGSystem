@@ -1,18 +1,19 @@
 #include "Gameplay/RPGTriggerRunnerSubsystem.h"
 
-#include "Commands/RPGCommand.h"
-#include "Data/RPGTriggerData.h"
 #include "Actors/RPGFieldCharacter.h"
 #include "Actors/Triggers/RPGTouchTrigger.h"
+#include "Commands/RPGCommand.h"
+#include "Data/RPGTriggerData.h"
+#include "Interface/TriggerInterface.h"
 
-bool URPGTriggerRunnerSubsystem::RunTrigger(ARPGTouchTrigger* Trigger, ARPGFieldCharacter* InstigatorActor)
+bool URPGTriggerRunnerSubsystem::RunTrigger(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor)
 {
-	if (bIsRunning || !Trigger)
+	if (bIsRunning || !TriggerActor || !TriggerActor->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
 	{
 		return false;
 	}
 
-    const URPGTriggerData* TriggerData = Trigger->GetTriggerData();
+	const URPGTriggerData* TriggerData = ITriggerInterface::Execute_GetTriggerData(TriggerActor);
 	if (!TriggerData)
 	{
 		return false;
@@ -27,7 +28,7 @@ bool URPGTriggerRunnerSubsystem::RunTrigger(ARPGTouchTrigger* Trigger, ARPGField
 	bIsRunning = true;
 
 	CurrentContext = FRPGTriggerExecutionContext();
-	CurrentContext.Trigger = Trigger;
+	CurrentContext.TriggerActor = TriggerActor;
 	CurrentContext.InstigatorActor = InstigatorActor;
 	CurrentContext.Commands = Chain->Commands;
 	CurrentContext.CommandIndex = 0;
@@ -53,7 +54,7 @@ void URPGTriggerRunnerSubsystem::ExecuteNextCommand()
 			continue;
 		}
 
-		const ERPGCommandResult Result = Command->Execute(CurrentContext.Trigger, CurrentContext.InstigatorActor);
+		const ERPGCommandResult Result = Command->Execute(CurrentContext.TriggerActor, CurrentContext.InstigatorActor);
 
 		switch (Result)
 		{
@@ -94,6 +95,16 @@ void URPGTriggerRunnerSubsystem::ContinueTrigger()
 	ExecuteNextCommand();
 }
 
+void URPGTriggerRunnerSubsystem::FinishWaiting(URPGCommand* PendingCommand)
+{
+	if (WaitingCommand == PendingCommand)
+	{
+		WaitingCommand = nullptr;
+
+		ExecuteNextCommand();
+	}
+}
+
 void URPGTriggerRunnerSubsystem::AbortTrigger()
 {
 	bIsRunning = false;
@@ -102,14 +113,15 @@ void URPGTriggerRunnerSubsystem::AbortTrigger()
 
 void URPGTriggerRunnerSubsystem::FinishTrigger()
 {
-	ARPGTouchTrigger* Trigger = CurrentContext.Trigger.Get();
-	const URPGTriggerData* TriggerData = Trigger->GetTriggerData();
+	AActor* Trigger = CurrentContext.TriggerActor.Get();
 
-	bIsRunning = false;
-
-	if (Trigger && TriggerData)
+	if (Trigger->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
 	{
-		Trigger->SetFinished(TriggerData->FinishAction);
+		if (const URPGTriggerData* TriggerData = ITriggerInterface::Execute_GetTriggerData(Trigger))
+		{
+			const FRPGEventChain& ActiveState = ITriggerInterface::Execute_GetActiveState(Trigger);
+			ITriggerInterface::Execute_SetFinished(Trigger, ActiveState.FinishAction);
+		}
 	}
 
 	CurrentContext = FRPGTriggerExecutionContext();

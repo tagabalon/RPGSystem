@@ -39,7 +39,7 @@ public:
 		return FText::FromString(TEXT("Show Text"));
 	}*/
 
-	virtual ERPGCommandResult Execute_Implementation(ARPGTouchTrigger* Trigger, ARPGFieldCharacter* InstigatorActor);
+	virtual ERPGCommandResult Execute_Implementation(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor);
 
 private:
     UUserWidget* GetMessageWidget(ARPGFieldCharacter* InstigatorActor) const;

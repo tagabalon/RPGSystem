@@ -30,6 +30,9 @@ public:
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Database Configuration")
 	TSoftObjectPtr<URPGDatabase> GameDatabaseAsset;
 
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Scenario Folder", meta = (ContentDir))
+	FString ScenarioFolder;
+
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "UI")
 	TSoftClassPtr<URPGInteractWidget> InteractWidgetAsset;
 
@@ -38,6 +41,9 @@ public:
 
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
 	TSoftObjectPtr<UInputMappingContext> InputMappingFieldControls;
+
+	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "UI Input")
+	TSoftObjectPtr<UInputMappingContext> InputMappingUIControls;
 
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
 	TSoftObjectPtr<UInputAction> InputMove;
@@ -49,20 +55,7 @@ public:
 	TSoftObjectPtr<UInputAction> InputInteract;
 
 	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
-	TSoftObjectPtr<UInputAction> InputOpenMenu;
-
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "UI Input")
-	TSoftObjectPtr<UInputMappingContext> InputMappingUIControls;
-
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
-	TSoftObjectPtr<UInputAction> InputDirectional;
-
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
-	TSoftObjectPtr<UInputAction> InputAccept;
-
-	UPROPERTY(Config, EditAnywhere, BlueprintReadOnly, Category = "Field Input")
-	TSoftObjectPtr<UInputAction> InputBack;
- 
+	TSoftObjectPtr<UInputAction> InputOpenMenu; 
 
 #if WITH_EDITOR
 	// Called when any property is changed in the settings UI

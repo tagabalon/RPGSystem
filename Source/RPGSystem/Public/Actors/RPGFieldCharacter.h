@@ -30,14 +30,13 @@ class RPGSYSTEM_API ARPGFieldCharacter : public ACharacter
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 	UAudioComponent* Audio;
 
-
 public:
 	ARPGFieldCharacter();
 
     void SetPartyMemberData(TWeakPtr<FRPGPartyMember> InPartyMemberData) { PartyMemberData = InPartyMemberData; }
 	
 	UFUNCTION(BlueprintCallable, Category = "Trigger")
-	void SetInteractableTrigger(ARPGTouchTrigger* InteractableTrigger);
+	void SetInteractableTrigger(AActor* TriggerActor);
 
 	UFUNCTION()
 	void InputActionInteract();
@@ -61,5 +60,5 @@ protected:
 	UFUNCTION()
 	void InputActionCamera(const FInputActionValue& Value);
 
-	ARPGTouchTrigger* InteractableTrigger;
+	AActor* InteractableTriggerActor;
 };

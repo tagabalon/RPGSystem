@@ -1,6 +1,7 @@
 #include "Actors/Triggers/RPGTouchTrigger.h"
 
 #include "Actors/RPGFieldCharacter.h"
+#include "Components/RPGInteractableComponent.h"
 #include "Gameplay/RPGTriggerRunnerSubsystem.h"
 #include "RPGGameInstance.h"
 #include "RPGSettings.h"
@@ -22,15 +23,22 @@ ARPGTouchTrigger::ARPGTouchTrigger()
 	PrimaryActorTick.bCanEverTick = true;
 	PrimaryActorTick.bStartWithTickEnabled = false;
 
-	CreateTriggerSphere();
-	CreateInteractWidget();
+	//CreateTriggerSphere();
+	//CreateInteractWidget();
+
+	InteractComponent = CreateDefaultSubobject<URPGInteractableComponent>(TEXT("Interactable"));
+	SetRootComponent(InteractComponent);
+
+	InteractComponent->SetAwarenessRadius(300.0f);
+	InteractComponent->OnCheckTriggerCondition.BindUObject(this, &ARPGTouchTrigger::CheckRequirements);
+	InteractComponent->OnPromptVisibilityChanged.AddDynamic(this, &ARPGTouchTrigger::OnPromptSetVisible);
 }
 
 void ARPGTouchTrigger::BeginPlay()
 {
 	Super::BeginPlay();
 
-	bPrompted = false;
+	//bPrompted = false;
 	bThreadFinished = false;
 
 	if (!TriggerData)
@@ -39,94 +47,94 @@ void ARPGTouchTrigger::BeginPlay()
 		return;
 	}
 
-	if (WidgetComponent)
+	/*if (WidgetComponent)
 	{
 		InteractWidget = Cast<URPGInteractWidget>(WidgetComponent->GetUserWidgetObject());
 
 		UnPrompt();
-	}
+	}*/
 
 	bIsInProximity = false;
-    bPrompted = false;
+    //bPrompted = false;
 
-	SetTriggerActive(false);
+	EnableTrigger(false);
 	SetActorTickEnabled(false);
 }
 
-TObjectPtr<USphereComponent> ARPGTouchTrigger::CreateTriggerSphere()
-{
-	TriggerSphere = CreateDefaultSubobject<USphereComponent>(TEXT("TriggerSphere"));
-	SetRootComponent(TriggerSphere);
+//TObjectPtr<USphereComponent> ARPGTouchTrigger::CreateTriggerSphere()
+//{
+//	TriggerSphere = CreateDefaultSubobject<USphereComponent>(TEXT("TriggerSphere"));
+//	SetRootComponent(TriggerSphere);
+//
+//	TriggerSphere->SetSphereRadius(300.0f);
+//	TriggerSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
+//	TriggerSphere->SetCollisionObjectType(ECC_WorldDynamic);
+//	TriggerSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
+//	TriggerSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
+//	TriggerSphere->SetGenerateOverlapEvents(true);
+//
+//	TriggerSphere->OnComponentBeginOverlap.AddDynamic(
+//		this,
+//		&ARPGTouchTrigger::OnTriggerBeginOverlap
+//	);
+//
+//	TriggerSphere->OnComponentEndOverlap.AddDynamic(
+//		this,
+//		&ARPGTouchTrigger::OnTriggerEndOverlap
+//	);
+//
+//	return TriggerSphere;
+//}
 
-	TriggerSphere->SetSphereRadius(300.0f);
-	TriggerSphere->SetCollisionEnabled(ECollisionEnabled::QueryOnly);
-	TriggerSphere->SetCollisionObjectType(ECC_WorldDynamic);
-	TriggerSphere->SetCollisionResponseToAllChannels(ECR_Ignore);
-	TriggerSphere->SetCollisionResponseToChannel(ECC_Pawn, ECR_Overlap);
-	TriggerSphere->SetGenerateOverlapEvents(true);
-
-	TriggerSphere->OnComponentBeginOverlap.AddDynamic(
-		this,
-		&ARPGTouchTrigger::OnTriggerBeginOverlap
-	);
-
-	TriggerSphere->OnComponentEndOverlap.AddDynamic(
-		this,
-		&ARPGTouchTrigger::OnTriggerEndOverlap
-	);
-
-	return TriggerSphere;
-}
-
-TObjectPtr<UWidgetComponent> ARPGTouchTrigger::CreateInteractWidget()
-{
-	if (const URPGSettings* RPGSettings = GetDefault<URPGSettings>())
-	{
-		if (RPGSettings->InteractWidgetAsset.IsNull())
-		{
-			UE_LOG(
-				LogTemp,
-				Error,
-				TEXT("%s: URPGSettings is missing TriggerPromptWidget reference."),
-				*GetName()
-			);
-			return nullptr;
-		}
-
-		WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("TriggerPrompt"));
-
-		WidgetComponent->SetupAttachment(RootComponent);
-		WidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
-		WidgetComponent->SetDrawSize(FVector2D(140.f, 100.0f));
-		WidgetComponent->SetWorldLocation(GetActorLocation());
-
-		if (UClass* WidgetClass = RPGSettings->InteractWidgetAsset.LoadSynchronous())
-		{
-			if(WidgetClass->ImplementsInterface(UInteractInterface::StaticClass()))
-			{
-				WidgetComponent->SetWidgetClass(WidgetClass);
-			}
-			else
-			{
-				UE_LOG(
-					LogTemp,
-					Error,
-					TEXT("%s: InteractWidget class from URPGSettings does not implement UInteractInterface."),
-					*GetName()
-				);
-
-				static ConstructorHelpers::FClassFinder<UUserWidget> DefaultWidgetAsset(TEXT("/RPGSystem/WBP_DefaultInteractWidget.WBP_DefaultInteractWidget"));
-
-				if (DefaultWidgetAsset.Succeeded())
-				{
-					WidgetComponent->SetWidgetClass(DefaultWidgetAsset.Class);
-				}
-            }
-		}
-	}
-
-	return WidgetComponent;
-}
+//TObjectPtr<UWidgetComponent> ARPGTouchTrigger::CreateInteractWidget()
+//{
+//	if (const URPGSettings* RPGSettings = GetDefault<URPGSettings>())
+//	{
+//		if (RPGSettings->InteractWidgetAsset.IsNull())
+//		{
+//			UE_LOG(
+//				LogTemp,
+//				Error,
+//				TEXT("%s: URPGSettings is missing TriggerPromptWidget reference."),
+//				*GetName()
+//			);
+//			return nullptr;
+//		}
+//
+//		WidgetComponent = CreateDefaultSubobject<UWidgetComponent>(TEXT("TriggerPrompt"));
+//
+//		WidgetComponent->SetupAttachment(RootComponent);
+//		WidgetComponent->SetWidgetSpace(EWidgetSpace::Screen);
+//		WidgetComponent->SetDrawSize(FVector2D(140.f, 100.0f));
+//		WidgetComponent->SetWorldLocation(GetActorLocation());
+//
+//		if (UClass* WidgetClass = RPGSettings->InteractWidgetAsset.LoadSynchronous())
+//		{
+//			if(WidgetClass->ImplementsInterface(UInteractInterface::StaticClass()))
+//			{
+//				WidgetComponent->SetWidgetClass(WidgetClass);
+//			}
+//			else
+//			{
+//				UE_LOG(
+//					LogTemp,
+//					Error,
+//					TEXT("%s: InteractWidget class from URPGSettings does not implement UInteractInterface."),
+//					*GetName()
+//				);
+//
+//				static ConstructorHelpers::FClassFinder<UUserWidget> DefaultWidgetAsset(TEXT("/RPGSystem/WBP_DefaultInteractWidget.WBP_DefaultInteractWidget"));
+//
+//				if (DefaultWidgetAsset.Succeeded())
+//				{
+//					WidgetComponent->SetWidgetClass(DefaultWidgetAsset.Class);
+//				}
+//            }
+//		}
+//	}
+//
+//	return WidgetComponent;
+//}
 
 void ARPGTouchTrigger::Tick(float DeltaSeconds)
 {
@@ -140,7 +148,7 @@ void ARPGTouchTrigger::Tick(float DeltaSeconds)
 		Interact(ActorToTrigger);
 	}*/
 
-	if (bIsInProximity && !bPrompted)
+	/*if (bIsInProximity && !bPrompted)
 	{
 		float squareDistance = (GetActorLocation() - TriggeringActor->GetActorLocation()).SquaredLength();
 		if (IsPromptable(TriggeringActor))
@@ -151,78 +159,77 @@ void ARPGTouchTrigger::Tick(float DeltaSeconds)
 		{
 			UnPrompt();
 		}
-	}
+	}*/
 }
 
-void ARPGTouchTrigger::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp,	int32 OtherBodyIndex,
-	bool bFromSweep, const FHitResult& SweepResult
-)
-{
-	if (GEngine)
-	{
-		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Being overlap!"));
-	}
+//void ARPGTouchTrigger::OnTriggerBeginOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+//	UPrimitiveComponent* OtherComp,	int32 OtherBodyIndex,
+//	bool bFromSweep, const FHitResult& SweepResult
+//)
+//{
+//	if (GEngine)
+//	{
+//		GEngine->AddOnScreenDebugMessage(-1, 5.0f, FColor::Yellow, TEXT("Being overlap!"));
+//	}
+//
+//    ARPGFieldCharacter* OverlappingCharacter = Cast<ARPGFieldCharacter>(OtherActor);
+//	if (!OverlappingCharacter)
+//	{
+//		return;
+//	}
+//
+//	UE_LOG(LogTemp, Verbose, TEXT("CheckRequirements"));
+//	if (CheckRequirements())
+//	{
+//		if (bPromptForAction)
+//		{
+//			bIsInProximity = true;
+//			TriggeringActor = OverlappingCharacter;
+//			SetActorTickEnabled(true);
+//
+//			UE_LOG(LogTemp, Verbose, TEXT("Player entered proximity of %s."), *GetName());
+//		}
+//		else
+//		{
+//			Interact(OverlappingCharacter);
+//		}
+//	}
+//}
 
-    ARPGFieldCharacter* OverlappingCharacter = Cast<ARPGFieldCharacter>(OtherActor);
-	if (!OverlappingCharacter)
-	{
-		return;
-	}
-
-	UE_LOG(LogTemp, Verbose, TEXT("CheckRequirements"));
-	if (CheckRequirements())
-	{
-		if (bPromptForAction)
-		{
-			bIsInProximity = true;
-			TriggeringActor = OverlappingCharacter;
-			SetActorTickEnabled(true);
-
-			UE_LOG(LogTemp, Verbose, TEXT("Player entered proximity of %s."), *GetName());
-		}
-		else
-		{
-			Interact(OverlappingCharacter);
-		}
-	}
-}
-
-void ARPGTouchTrigger::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
-	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex
-)
-{
-	ARPGFieldCharacter* OverlappingCharacter = Cast<ARPGFieldCharacter>(OtherActor);
-	if (!OverlappingCharacter)
-	{
-		return;
-	}
-
-	if (bPrompted)
-	{
-		UnPrompt();
-	}
-
-	if (TriggeringActor == OverlappingCharacter)
-	{
-		TriggeringActor = nullptr;
-	}
-
-	bIsInProximity = false;
-	SetActorTickEnabled(false);
-
-	UE_LOG(LogTemp, Verbose, TEXT("Player exited proximity of %s."), *GetName());
-}
+//void ARPGTouchTrigger::OnTriggerEndOverlap(UPrimitiveComponent* OverlappedComponent, AActor* OtherActor,
+//	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex
+//)
+//{
+//	ARPGFieldCharacter* OverlappingCharacter = Cast<ARPGFieldCharacter>(OtherActor);
+//	if (!OverlappingCharacter)
+//	{
+//		return;
+//	}
+//
+//	if (bPrompted)
+//	{
+//		UnPrompt();
+//	}
+//
+//	if (TriggeringActor == OverlappingCharacter)
+//	{
+//		TriggeringActor = nullptr;
+//	}
+//
+//	bIsInProximity = false;
+//	SetActorTickEnabled(false);
+//
+//	UE_LOG(LogTemp, Verbose, TEXT("Player exited proximity of %s."), *GetName());
+//}
 
 bool ARPGTouchTrigger::CheckRequirements() const
 {
-	if (FlagRequirement < 0)
+	/*if (FlagRequirement < 0)
 	{
 		return true;
-	}
+	}*/
 
-	const URPGGameInstance* RPGGameInstance =
-		URPGGameInstance::GetRPGGameInstance(this);
+	const URPGGameInstance* RPGGameInstance = URPGGameInstance::GetRPGGameInstance(this);
 
 	if (!RPGGameInstance)
 	{
@@ -236,64 +243,69 @@ bool ARPGTouchTrigger::CheckRequirements() const
 	return true;
 }
 
-bool ARPGTouchTrigger::IsPromptable(const AActor* Actor) const
+void ARPGTouchTrigger::OnPromptSetVisible(ARPGFieldCharacter* TriggeringCharacter, bool bIsVisible)
 {
-	if (Actor)
-	{
-		float squareDistance = (GetActorLocation() - TriggeringActor->GetActorLocation()).SquaredLength();
-		if (squareDistance < PromptDistance * PromptDistance)
-		{
-
-			FVector VectorToMe = (GetActorLocation() - Actor->GetActorLocation());
-			VectorToMe.Normalize();
-
-			float DotProduct = FVector::DotProduct(VectorToMe, Actor->GetActorForwardVector());
-			float Angle = FMath::RadiansToDegrees(FMath::Acos(DotProduct));
-			return FMath::Abs(Angle) < 45.0f;
-		}
-	}
-
-    return false;
+	TriggerSource = TriggeringCharacter;
 }
 
-void ARPGTouchTrigger::Prompt(AActor* InstigatorActor)
-{
-	if (InteractWidget)
-	{
-        IInteractInterface::Execute_ShowInteract(InteractWidget, PromptText.ToString());
+//bool ARPGTouchTrigger::IsPromptable(const AActor* Actor) const
+//{
+//	if (Actor)
+//	{
+//		float squareDistance = (GetActorLocation() - TriggeringActor->GetActorLocation()).SquaredLength();
+//		if (squareDistance < PromptDistance * PromptDistance)
+//		{
+//
+//			FVector VectorToMe = (GetActorLocation() - Actor->GetActorLocation());
+//			VectorToMe.Normalize();
+//
+//			float DotProduct = FVector::DotProduct(VectorToMe, Actor->GetActorForwardVector());
+//			float Angle = FMath::RadiansToDegrees(FMath::Acos(DotProduct));
+//			return FMath::Abs(Angle) < 45.0f;
+//		}
+//	}
+//
+//    return false;
+//}
 
-		if (TriggeringActor == InstigatorActor)
-		{
-            TriggeringActor->SetInteractableTrigger(this);
-		}
-
-		bPrompted = true;
-	}
-
-}
-
-void ARPGTouchTrigger::UnPrompt()
-{
-	if (InteractWidget)
-	{
-		IInteractInterface::Execute_HideInteract(InteractWidget);
-	}
-
-	if (TriggeringActor)
-	{
-		TriggeringActor->SetInteractableTrigger(nullptr);
-	}
-	bPrompted = false;
-}
+//void ARPGTouchTrigger::Prompt(AActor* InstigatorActor)
+//{
+//	if (InteractWidget)
+//	{
+//        IInteractInterface::Execute_ShowInteract(InteractWidget, PromptText.ToString());
+//
+//		if (TriggeringActor == InstigatorActor)
+//		{
+//            TriggeringActor->SetInteractableTrigger(this);
+//		}
+//
+//		bPrompted = true;
+//	}
+//
+//}
+//
+//void ARPGTouchTrigger::UnPrompt()
+//{
+//	if (InteractWidget)
+//	{
+//		IInteractInterface::Execute_HideInteract(InteractWidget);
+//	}
+//
+//	if (TriggeringActor)
+//	{
+//		TriggeringActor->SetInteractableTrigger(nullptr);
+//	}
+//	bPrompted = false;
+//}
 
 void ARPGTouchTrigger::Interact(ARPGFieldCharacter* InstigatorActor)
 {
-	if (!TriggerData || bThreadRunning || InstigatorActor != TriggeringActor)
+	if (!TriggerData || bThreadRunning || TriggerSource)
 	{
 		return;
 	}
 
-	UnPrompt();
+	//UnPrompt();
 
 	bThreadRunning = true;
 	bThreadFinished = false;
@@ -316,7 +328,7 @@ void ARPGTouchTrigger::Interact(ARPGFieldCharacter* InstigatorActor)
 	bRunning = bStarted;
 }
 
-void ARPGTouchTrigger::SetFinished(ERPGTriggerFinishAction FinishAction)
+void ARPGTouchTrigger::SetFinished_Implementation(ERPGTriggerFinishAction FinishAction)
 {
 	switch (FinishAction)
 	{
@@ -331,7 +343,7 @@ void ARPGTouchTrigger::SetFinished(ERPGTriggerFinishAction FinishAction)
 
 	case ERPGTriggerFinishAction::None:
 	default:
-		DisableTrigger();
+		EnableTrigger(false);
 		break;
 	}
 
@@ -339,25 +351,19 @@ void ARPGTouchTrigger::SetFinished(ERPGTriggerFinishAction FinishAction)
 	bThreadFinished = true;
 }
 
-void ARPGTouchTrigger::DisableTrigger()
+void ARPGTouchTrigger::EnableTrigger_Implementation(bool bValue)
 {
-	if (TriggerSphere)
-	{
-		TriggerSphere->SetCollisionEnabled(ECollisionEnabled::NoCollision);
-	}
-}
+    Super::EnableTrigger(bValue);
 
-void ARPGTouchTrigger::SetTriggerActive(bool bActive)
-{
-	if (!TriggerSphere)
+	InteractComponent->EnableInteract(bValue);
+	/*if (!TriggerSphere)
 	{
 		return;
-	}
+	}*/
 
-	TriggerSphere->SetCollisionEnabled(bActive ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
+	/*TriggerSphere->SetCollisionEnabled(bEnabled ? ECollisionEnabled::QueryOnly : ECollisionEnabled::NoCollision);
 
-	TriggerSphere->SetGenerateOverlapEvents(bActive);
-	PrimaryActorTick.bCanEverTick = bActive;
+	TriggerSphere->SetGenerateOverlapEvents(bEnabled);*/
 }
 
 #if WITH_EDITOR

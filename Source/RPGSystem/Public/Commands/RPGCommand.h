@@ -22,7 +22,7 @@ class RPGSYSTEM_API URPGCommand : public UObject
 	GENERATED_BODY()
 
 protected:
-	virtual ERPGCommandResult Execute_Implementation(ARPGTouchTrigger* Trigger, ARPGFieldCharacter* InstigatorActor)
+	virtual ERPGCommandResult Execute_Implementation(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor)
 	{
         return ERPGCommandResult::Continue;
 	}
@@ -34,7 +34,7 @@ protected:
 
 public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "RPG|Command")
-	ERPGCommandResult Execute(ARPGTouchTrigger* Trigger, ARPGFieldCharacter* InstigatorActor);
+	ERPGCommandResult Execute(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor);
 
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "RPG|Command")
 	ERPGCommandResult Continue();
