@@ -2,11 +2,11 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Components/AudioComponent.h"
 
 #include "RPGFieldCharacter.generated.h"
 
 class ARPGTouchTrigger;
-class UAudioComponent;
 class UCameraComponent;
 class UInputAction;
 class UInputMappingContext;

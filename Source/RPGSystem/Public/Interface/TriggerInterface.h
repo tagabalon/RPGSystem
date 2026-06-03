@@ -1,8 +1,7 @@
 #pragma once
 
 #include "UObject/Interface.h"
-
-struct FRPGEventChain;
+#include "Data/RPGTriggerData.h"
 
 #include "TriggerInterface.generated.h"
 

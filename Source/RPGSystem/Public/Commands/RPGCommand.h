@@ -39,4 +39,19 @@ public:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "RPG|Command")
 	ERPGCommandResult Continue();
 
+
+	// Graph properties
+public:
+	UPROPERTY()
+	FGuid CommandGuid;
+
+#if WITH_EDITORONLY_DATA
+	UPROPERTY()
+	FVector2D EditorPosition;
+#endif
+
+	virtual FText GetNodeTitle() const
+	{
+		return FText::FromString(TEXT("RPG Command"));
+	}
 };

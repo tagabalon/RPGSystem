@@ -2,6 +2,7 @@
 
 #include "Engine/DeveloperSettings.h"
 
+#include "Data/RPGDatabase.h"
 #include "InputAction.h"
 #include "Templates/SubclassOf.h"
 #include "UI/RPGHUD.h"
