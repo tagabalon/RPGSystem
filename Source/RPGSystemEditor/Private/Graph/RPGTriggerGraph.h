@@ -19,6 +19,7 @@ public:
 	int32 StateIndex = INDEX_NONE;
 
 	void Initialize(URPGTriggerData* InTriggerData, int32 InStateIndex);
+	void RebuildFromStateCommands();
 
 	bool IsValidGraph() const;
 };

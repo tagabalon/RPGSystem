@@ -48,10 +48,17 @@ public:
 #if WITH_EDITORONLY_DATA
 	UPROPERTY()
 	FVector2D EditorPosition;
-#endif
+#endif // WITH_EDITORONLY_DATA
 
+#if WITH_EDITOR
 	virtual FText GetNodeTitle() const
 	{
 		return FText::FromString(TEXT("RPG Command"));
 	}
+
+	virtual FText GetEditorNodeBodyText() const
+	{
+		return FText::GetEmpty();
+	}
+#endif // WITH_EDITOR
 };

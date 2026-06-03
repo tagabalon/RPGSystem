@@ -23,7 +23,7 @@ public:
 	void SetFinished_Implementation(ERPGTriggerFinishAction FinishAction) override;
 	void EnableTrigger_Implementation(bool Enabled) override;
 	void ExecuteTrigger_Implementation() override;
-    const FRPGEventChain GetActiveState_Implementation() const override;
+	int32 GetActiveState_Implementation(FRPGTriggerState& ActiveState) const override;
 
 protected:
 	// Called when the game starts or when spawned

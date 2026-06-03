@@ -206,7 +206,7 @@ void ARPGMapScenario::SyncTriggers()
 		if (TriggerData->States.Num() == 0)
 			continue;
 
-		const FRPGEventChain* ActiveState = &TriggerData->States[0];
+		const FRPGTriggerState* ActiveState = &TriggerData->States[0];
 		if (ActiveState == nullptr)
 			continue;
 

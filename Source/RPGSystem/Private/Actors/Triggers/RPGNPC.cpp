@@ -34,8 +34,8 @@ ARPGNPC::ARPGNPC()
 	InteractComponent = CreateDefaultSubobject<URPGInteractableComponent>(TEXT("Interactable"));
 	InteractComponent->SetupAttachment(RootComponent);
 	InteractComponent->SetAwarenessRadius(400.0f);
-	InteractComponent->OnInteractPressed.BindUObject(this, &ARPGNPC::ExecuteTrigger);
     InteractComponent->OnCheckTriggerCondition.BindUObject(this, &ARPGNPC::CheckRequirements);
+	InteractComponent->OnInteractPressed.AddDynamic(this, &ARPGNPC::OnInteract);
     InteractComponent->OnPromptVisibilityChanged.AddDynamic(this, &ARPGNPC::OnPromptSetVisible);
 
 	AudioSource = CreateDefaultSubobject<UAudioComponent>("AudioSource");
@@ -105,14 +105,14 @@ const URPGTriggerData* ARPGNPC::GetTriggerData_Implementation() const
 	return TriggerData;
 }
 
-const FRPGEventChain ARPGNPC::GetActiveState_Implementation() const
+int32 ARPGNPC::GetActiveState_Implementation(FRPGTriggerState& ActiveState) const
 {
-	if (ActiveStateIndex < TriggerData->States.Num())
+	if (TriggerData && TriggerData->States.IsValidIndex(ActiveStateIndex))
 	{
-		return TriggerData->States[ActiveStateIndex];
+		ActiveState = TriggerData->States[ActiveStateIndex];
+		return ActiveStateIndex;
 	}
-
-	return FRPGEventChain();
+	return -1;
 }
 
 void ARPGNPC::SetFinished_Implementation(ERPGTriggerFinishAction FinishAction)
@@ -127,6 +127,17 @@ void ARPGNPC::EnableTrigger_Implementation(bool Enabled)
 void ARPGNPC::SetTriggerData_Implementation(URPGTriggerData* pTriggerData)
 {
 	TriggerData = pTriggerData;
+}
+
+void ARPGNPC::SetActiveState_Implementation(int32 StateIndex)
+{
+	ActiveStateIndex = StateIndex;
+}
+
+void ARPGNPC::OnInteract(ARPGFieldCharacter* pTriggerSource)
+{
+    TriggerSource = pTriggerSource;
+    ExecuteTrigger_Implementation();
 }
 
 #if WITH_EDITOR

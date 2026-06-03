@@ -14,7 +14,7 @@ class RPGSYSTEM_API UShowText : public URPGCommand
 
 public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Message")
-	FText Name = FText();
+	FText SpeakerName = FText();
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Message")
 	FText Text = FText();
@@ -23,24 +23,24 @@ public:
 	UTexture2D* Face = nullptr;
 	
 public:
-	void SetName(FText InName) { Name = InName; }
+	void SetName(FText InName) { SpeakerName = InName; }
 	void SetText(FText InText) { Text = InText; }
 	//virtual void Execute(APlayerController* Player, AMapEventActor* MapEventActor);
 
 	bool IsUINeeded() { return true; }
 
-	//BaseCommand
-	/*virtual FText GetCategory() const
-	{
-		return CategoryMessage;
-	}*/
-
-	/*virtual FText GetLabel() const {
-		return FText::FromString(TEXT("Show Text"));
-	}*/
-
 	virtual ERPGCommandResult Execute_Implementation(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor);
 
 private:
     UUserWidget* GetMessageWidget(ARPGFieldCharacter* InstigatorActor) const;
+
+#if WITH_EDITOR
+public:
+	virtual FText GetNodeTitle() const
+	{
+		return FText::FromString(TEXT("Show Text"));
+	}
+
+
+#endif // WITH_EDITOR
 };

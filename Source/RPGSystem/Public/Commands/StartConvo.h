@@ -42,5 +42,16 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> MessageWidget;
+	
+#if WITH_EDITOR
+public:
+	virtual FText GetNodeTitle() const override
+	{
+		return FText::FromString(TEXT("Start Conversation"));
+    }
+#endif
 
+#if WITH_EDITORONLY_DATA
+
+#endif // WITH_EDITORONLY_DATA
 };

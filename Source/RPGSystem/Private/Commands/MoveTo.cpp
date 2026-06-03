@@ -1,6 +1,8 @@
 #include "Commands/MoveTo.h"
 
+#include "Actors/RPGFieldCharacter.h"
 #include "Gameplay/RPGProgressionSubsystem.h"
+#include "Gameplay/RPGTriggerRunnerSubsystem.h"
 #include "Level/RPGMapScenario.h"
 
 #include "AIController.h"
@@ -12,6 +14,8 @@
 
 ERPGCommandResult UMoveTo::Execute_Implementation(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor)
 {
+    Instigator = InstigatorActor;
+
     AActor* ActorToMove = nullptr;
 
     switch (Target)
@@ -46,14 +50,44 @@ ERPGCommandResult UMoveTo::Execute_Implementation(AActor* TriggerActor, ARPGFiel
             FAIMoveRequest MoveRequest;
             MoveRequest.SetGoalLocation(DestinationLocation);
             MoveRequest.SetAcceptanceRadius(15.f);
+            MoveRequest.SetUsePathfinding(true);
 
-            MoveToResult = AICon->MoveTo(MoveRequest);
+            if (WaitToReachDestination)
+            {
+                UPathFollowingComponent* PathFollowComp = AICon->GetPathFollowingComponent();
+                if (PathFollowComp)
+                {
+                    // Ensure we don't double-bind if this function is called multiple times
+                    PathFollowComp->OnRequestFinished.RemoveAll(this);
+                    // OnRequestFinished is a TMulticastDelegate, not a dynamic multicast delegate, so use AddLambda or AddRaw/AddUObject
+                    PathFollowComp->OnRequestFinished.AddUObject(this, &UMoveTo::OnReachDestination);
+                }
+                MoveToResult = AICon->MoveTo(MoveRequest);
 
-            return ERPGCommandResult::Wait;
+                return ERPGCommandResult::Wait;
+            }
+            else
+            {
+                MoveToResult = AICon->MoveTo(MoveRequest);
+
+                return ERPGCommandResult::Continue;
+            }
         }
     }
 
     return ERPGCommandResult::Continue;
+}
+
+
+void UMoveTo::OnReachDestination(FAIRequestID RequestID, const FPathFollowingResult& Result)
+{
+    if (UGameInstance* GameInstance = Instigator->GetGameInstance())
+    {
+        if (URPGTriggerRunnerSubsystem* TriggerRunner = GameInstance->GetSubsystem<URPGTriggerRunnerSubsystem>())
+        {
+            TriggerRunner->FinishWaiting(this);
+        }
+    }
 }
 
 ERPGCommandResult UMoveTo::Continue_Implementation()

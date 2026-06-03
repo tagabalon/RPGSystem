@@ -128,7 +128,6 @@ void URPGInteractableComponent::EnableInteract(bool Enabled)
 	{
 		IInteractInterface::Execute_HideInteract(InteractWidget);
 	}
-
 }
 
 bool URPGInteractableComponent::IsPromptable(const ARPGFieldCharacter* OtherCharacter) const
@@ -162,6 +161,7 @@ void URPGInteractableComponent::OnEnterInteractable(UPrimitiveComponent* Overlap
 	{
 		return;
 	}
+	TriggerSource = OverlappingCharacter;
 
 	UE_LOG(LogTemp, Verbose, TEXT("CheckRequirements"));
 	if (OnCheckTriggerCondition.IsBound())
@@ -176,7 +176,6 @@ void URPGInteractableComponent::OnEnterInteractable(UPrimitiveComponent* Overlap
 	{
 		bIsInProximity = true;
 		bIsPrompted = false;
-		TriggerSource = OverlappingCharacter;
 
         SetComponentTickEnabled(true);
 
@@ -184,7 +183,7 @@ void URPGInteractableComponent::OnEnterInteractable(UPrimitiveComponent* Overlap
 	}
 	else
 	{
-		OnInteractPressed.ExecuteIfBound();
+		OnInteractPressed.Broadcast(TriggerSource);
 	}
 }
 

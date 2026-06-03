@@ -35,7 +35,8 @@ public:
 	void SetFinished_Implementation(ERPGTriggerFinishAction FinishAction) override;
 	void EnableTrigger_Implementation(bool Enabled) override;
 	void ExecuteTrigger_Implementation() override;
-	const FRPGEventChain GetActiveState_Implementation() const override;
+	int32 GetActiveState_Implementation(FRPGTriggerState& ActiveState) const override;
+    void SetActiveState_Implementation(int32 StateIndex);
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
 	TObjectPtr<URPGTriggerData> TriggerData;
@@ -54,18 +55,16 @@ protected:
 	
 protected:
 	UFUNCTION()
+	void OnInteract(ARPGFieldCharacter* pTriggerSource);
+
+	UFUNCTION()
 	void OnPromptSetVisible(ARPGFieldCharacter* TriggeringCharacter, bool bIsVisible);
 
 	bool CheckRequirements() const;
 
+
 	UPROPERTY(Category=Character, VisibleAnywhere, BlueprintReadOnly, meta=(AllowPrivateAccess = "true"))
 	TObjectPtr<UAudioComponent> AudioSource;
-
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
-	//USphereComponent* TriggerSphere;
-
-	//UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
-	//TObjectPtr<UWidgetComponent> WidgetComponent;
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = "Components")
 	TObjectPtr<URPGInteractableComponent> InteractComponent;

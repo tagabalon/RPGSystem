@@ -9,10 +9,8 @@ class URPGInteractWidget;
 class USphereComponent;
 class UWidgetComponent;
 
-DECLARE_DELEGATE(FOnInteractSignature);
-
 DECLARE_DELEGATE_RetVal(bool, FCheckTriggerConditionSignature);
-
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnInteractSignature, ARPGFieldCharacter*, TriggeringCharacter);
 DECLARE_DYNAMIC_MULTICAST_DELEGATE_TwoParams(FOnPromptVisibilityChangedSignature, ARPGFieldCharacter*, TriggeringCharacter, bool, bIsVisible);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
@@ -33,8 +31,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "Interact")
 	void EnableInteract(bool Enabled);
 
-	FOnInteractSignature OnInteractPressed;
+	// Delegates
 	FCheckTriggerConditionSignature OnCheckTriggerCondition;
+
+	UPROPERTY(BlueprintAssignable, Category = "Interaction")
+	FOnInteractSignature OnInteractPressed;
 
 	UPROPERTY(BlueprintAssignable, Category = "Interaction")
 	FOnPromptVisibilityChangedSignature OnPromptVisibilityChanged;

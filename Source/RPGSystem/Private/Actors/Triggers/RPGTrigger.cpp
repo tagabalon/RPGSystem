@@ -77,14 +77,14 @@ void ARPGTrigger::EnableTrigger_Implementation(bool bValue)
 	PrimaryActorTick.bCanEverTick = bEnabled;
 }
 
-const FRPGEventChain ARPGTrigger::GetActiveState_Implementation() const
+int32 ARPGTrigger::GetActiveState_Implementation(FRPGTriggerState& ActiveState) const
 {
-	if(ActiveStateIndex < TriggerData->States.Num())
+	if (TriggerData && TriggerData->States.IsValidIndex(ActiveStateIndex))
 	{
-		return TriggerData->States[ActiveStateIndex];
-    }
-
-    return FRPGEventChain();
+		ActiveState = TriggerData->States[ActiveStateIndex];
+		return ActiveStateIndex;
+	}
+	return -1;
 }
 
 #if WITH_EDITOR

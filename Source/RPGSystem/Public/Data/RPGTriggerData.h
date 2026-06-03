@@ -26,53 +26,47 @@ enum class ERPGTriggerActivation : uint8
 };
 
 USTRUCT(BlueprintType)
-struct FRPGEventChain
+struct FRPGTriggerState
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions", meta = (DisplayName="Switch"))
 	bool HasSwitchACondition = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions", meta = (DisplayName="Id", EditCondition = "HasSwitchACondition"))
 	FName SwitchAId;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions", meta = (DisplayName = "Switch"))
 	bool HasSwitchBCondition = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions", meta = (DisplayName = "Id", EditCondition = "HasSwitchBCondition"))
 	FName SwitchBId;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions", meta = (DisplayName = "Variable"))
 	bool HasVariableCondition = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions", meta = (DisplayName = "Id", EditCondition = "HasVariableCondition"))
 	FName VariableId;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions", meta = (DisplayName = "is greater than or equal to...", EditCondition = "HasVariableCondition"))
 	int32 VariableCheck;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
-	bool HasSelfSwitchCondition = false;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
-	FName SelfSwitchName;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions", meta = (DisplayName = "Item"))
 	bool HasItemCondition = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions", meta = (DisplayName = "Id", EditCondition = "HasItemCondition"))
 	FName ItemId;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions", meta = (DisplayName = "Character"))
 	bool HasCharacterCondition = false;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Condition")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Conditions", meta = (DisplayName = "Id", EditCondition = "HasCharacterCondition"))
 	FName CharacterId;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character")
 	TObjectPtr<USkeletalMesh> CharacterMesh;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Character")
 	TObjectPtr<UAnimBlueprint> CharacterAnimation;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Activation")
@@ -84,7 +78,7 @@ struct FRPGEventChain
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
 	ERPGTriggerFinishAction FinishAction = ERPGTriggerFinishAction::None;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Trigger")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Collision")
 	bool NoCollide = false;
 
 	UPROPERTY(EditAnywhere, Instanced, BlueprintReadWrite, Category = "Events")
@@ -119,7 +113,7 @@ public:
 	FVector2D GraphPosition = FVector2D::ZeroVector;*/
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Events")
-	TArray<FRPGEventChain> States;
+	TArray<FRPGTriggerState> States;
 
 	UFUNCTION(BlueprintPure, Category = "Events")
 	int32 GetStateCount() const
@@ -150,7 +144,7 @@ public:
 		}
 	}
 
-	const FRPGEventChain* GetChain(int32 State) const
+	const FRPGTriggerState* GetChain(int32 State) const
 	{
 		return States.IsValidIndex(State) ? &States[State] : nullptr;
 	}

@@ -17,6 +17,8 @@ struct FRPGTriggerExecutionContext
 	UPROPERTY()
 	TObjectPtr<AActor> TriggerActor = nullptr;
 
+	int32 StateIndex = 0;
+
 	UPROPERTY()
 	TObjectPtr<ARPGFieldCharacter> InstigatorActor = nullptr;
 

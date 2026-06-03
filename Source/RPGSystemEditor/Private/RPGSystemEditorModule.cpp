@@ -1,8 +1,11 @@
 #include "RPGSystemEditorModule.h"
 
-#include "AssetToolsModule.h"
-#include "IAssetTools.h"
 #include "AssetTools/AssetTypeActions_RPGTriggerData.h"
+
+#include "AssetToolsModule.h"
+#include "EdGraphUtilities.h"
+#include "Graph/RPGGraphNodeFactory.h"
+#include "IAssetTools.h"
 
 #define LOCTEXT_NAMESPACE "FRPGEditorModule"
 
@@ -14,6 +17,9 @@ void FRPGEditorModule::StartupModule()
 		AssetTools,
 		MakeShared<FAssetTypeActions_RPGTriggerData>()
 	);
+
+	GraphNodeFactory = MakeShared<FRPGGraphNodeFactory>();
+	FEdGraphUtilities::RegisterVisualNodeFactory(GraphNodeFactory);
 }
 
 void FRPGEditorModule::ShutdownModule()
@@ -29,6 +35,12 @@ void FRPGEditorModule::ShutdownModule()
 	}
 
 	RegisteredAssetTypeActions.Empty();
+
+	if (GraphNodeFactory.IsValid())
+	{
+		FEdGraphUtilities::UnregisterVisualNodeFactory(GraphNodeFactory);
+		GraphNodeFactory.Reset();
+	}
 }
 
 void FRPGEditorModule::RegisterAssetTypeAction(

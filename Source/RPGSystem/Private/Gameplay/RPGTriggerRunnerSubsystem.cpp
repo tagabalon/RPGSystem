@@ -19,18 +19,16 @@ bool URPGTriggerRunnerSubsystem::RunTrigger(AActor* TriggerActor, ARPGFieldChara
 		return false;
     }
 
-	const FRPGEventChain* Chain = TriggerData->GetChain(0);
-	if (!Chain)
-	{
-		return false;
-	}
+	FRPGTriggerState ActiveState;	
+	int32 ActiveStateIndex = ITriggerInterface::Execute_GetActiveState(TriggerActor, ActiveState);
 
 	bIsRunning = true;
 
 	CurrentContext = FRPGTriggerExecutionContext();
 	CurrentContext.TriggerActor = TriggerActor;
+	CurrentContext.StateIndex = ActiveStateIndex;
 	CurrentContext.InstigatorActor = InstigatorActor;
-	CurrentContext.Commands = Chain->Commands;
+	CurrentContext.Commands = ActiveState.Commands;
 	CurrentContext.CommandIndex = 0;
 
 	ExecuteNextCommand();
@@ -115,14 +113,17 @@ void URPGTriggerRunnerSubsystem::FinishTrigger()
 {
 	AActor* Trigger = CurrentContext.TriggerActor.Get();
 
-	if (Trigger->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
+	/*if (Trigger->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
 	{
 		if (const URPGTriggerData* TriggerData = ITriggerInterface::Execute_GetTriggerData(Trigger))
 		{
-			const FRPGEventChain& ActiveState = ITriggerInterface::Execute_GetActiveState(Trigger);
-			ITriggerInterface::Execute_SetFinished(Trigger, ActiveState.FinishAction);
+			FRPGTriggerState ActiveState;
+			if (ITriggerInterface::Execute_GetActiveState(Trigger, ActiveState) >= 0)
+			{
+				ITriggerInterface::Execute_SetFinished(Trigger, ActiveState.FinishAction);
+			}
 		}
-	}
+	}*/
 
 	CurrentContext = FRPGTriggerExecutionContext();
 }

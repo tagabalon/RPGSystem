@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "EdGraphUtilities.h"
 #include "Modules/ModuleManager.h"
 
 class IAssetTypeActions;
@@ -14,6 +15,7 @@ public:
 
 private:
 	TArray<TSharedRef<IAssetTypeActions>> RegisteredAssetTypeActions;
+	TSharedPtr<FGraphPanelNodeFactory> GraphNodeFactory;
 
 	void RegisterAssetTypeAction(IAssetTools& AssetTools, TSharedRef<IAssetTypeActions> Action);
 };

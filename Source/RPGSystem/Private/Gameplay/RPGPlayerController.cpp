@@ -46,10 +46,7 @@ void ARPGPlayerController::SetupInputComponent()
 		FieldInputMappingContext = Cast<UInputMappingContext>(RPGSettings->InputMappingFieldControls.LoadSynchronous());
 	}
 
-	//if (RPGSettings->InputMappingUIControls)
-	{
-		UIInputMappingContext = Cast<UInputMappingContext>(RPGSettings->InputMappingUIControls.LoadSynchronous());
-	}
+	UIInputMappingContext = Cast<UInputMappingContext>(RPGSettings->InputMappingUIControls.LoadSynchronous());
 	
 	if (RPGSettings->InputInteract)
 	{

@@ -64,7 +64,7 @@ TSharedRef<SDockTab> FRPGTriggerEditor::SpawnGraphTab(const FSpawnTabArgs& Args)
 	return SNew(SDockTab)
 		.Label(FText::FromString(TEXT("Graph")))
 		[
-			SNew(SRPGTriggerGraphEditor, TriggerData, 0)
+			SNew(SRPGTriggerGraphEditor, TriggerData)
 		];
 }
 

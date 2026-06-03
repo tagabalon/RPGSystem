@@ -26,7 +26,10 @@ public class RPGSystemEditor : ModuleRules
 			new string[]
 			{
 				"Core",
-				"RPGSystem"
+				"RPGSystem",
+				"PropertyEditor",
+				"ContentBrowser",
+				"AssetTools"
 				// ... add other public dependencies that you statically link with here ...
 			}
 			);
