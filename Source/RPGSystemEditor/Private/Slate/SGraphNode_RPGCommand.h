@@ -5,6 +5,7 @@
 
 class URPGCommandGraphNode;
 
+class UMoveTo;
 class UShowText;
 class UStartConvo;
 class URPGConvoAsset;
@@ -26,7 +27,12 @@ private:
 
 	const FSlateBrush* GetTextureBrush(UTexture2D* Texture) const;
     const TArray<TSharedPtr<FName>> GetConvoIds(URPGConvoAsset* Convo) const;
+	void RefreshNamedOptions(TArray<FName> NameList);
+	void RefreshEnumOptions(const UEnum* Enum);
 
 	TSharedRef<SWidget> CreateShowTextBody(UShowText* Command);
 	TSharedRef<SWidget> CreateStartConvoBody(UStartConvo* Command);
+	TSharedRef<SWidget> CreateMoveToBody(UMoveTo* Command);
+
+	TArray<TSharedPtr<FName>> NamedOptions;
 };

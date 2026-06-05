@@ -8,7 +8,7 @@
 struct FPathFollowingResult;
 
 UENUM(BlueprintType)
-enum class FTargetToMove : uint8
+enum class ETargetToMove : uint8
 {
 	Self,
 	MainCharacter,
@@ -29,7 +29,7 @@ public:
     // The target to move. If PartyFollower is selected, the command will try to move the first party member that is not the main character.
 	// If NPCActor is selected, the command will try to move the first NPC actor that is not the main character.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move To")
-	FTargetToMove Target;
+	ETargetToMove Target;
 
     // The destination trigger to move to. This should be the name of a trigger placed in the level. The command will try to find a trigger with this name and move to it.
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Move To", meta = (GetOptions = "GetScenarioTriggers"))
@@ -49,4 +49,12 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<ARPGFieldCharacter> Instigator;
+
+#if WITH_EDITOR
+public:
+	virtual FText GetNodeTitle() const override
+	{
+		return FText::FromString(TEXT("Move To..."));
+	}
+#endif
 };

@@ -108,6 +108,18 @@ public:
 		return Convos.Add(NewConvo);
 	}
 
+	UFUNCTION(BlueprintPure)
+	TArray<FName> GetConvoIds() const
+	{
+		TArray<FName> ConvoIds;
+		for (const FRPGConvo& Convo : Convos)
+		{
+			ConvoIds.Add(Convo.ConvoId);
+		}
+
+		return ConvoIds;
+	}
+
 private:
 
 	FName MakeUniqueConvoId() const

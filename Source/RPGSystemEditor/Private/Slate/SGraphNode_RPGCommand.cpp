@@ -2,6 +2,7 @@
 
 #include "Graph/RPGCommandGraphNode.h"
 #include "Commands/RPGCommand.h"
+#include "Commands/MoveTo.h"
 #include "Commands/ShowText.h"
 #include "Commands/StartConvo.h"
 #include "Data/RPGConvoAsset.h"
@@ -124,6 +125,11 @@ TSharedRef<SWidget> SGraphNode_RPGCommand::CreateCommandBodyWidget()
 	{
 		return CreateStartConvoBody(StartConvo);
     }
+	else if (UMoveTo* MoveTo = Cast<UMoveTo>(RPGNode->Command))
+	{
+		RefreshEnumOptions(StaticEnum<ETargetToMove>());
+		return CreateMoveToBody(MoveTo);
+	}
 
 	return SNew(STextBlock)
 		.Text(this, &SGraphNode_RPGCommand::GetBodyText)
@@ -170,6 +176,38 @@ const TArray<TSharedPtr<FName>> SGraphNode_RPGCommand::GetConvoIds(URPGConvoAsse
     }
 
 	return ConvoIds;
+}
+
+void SGraphNode_RPGCommand::RefreshNamedOptions(TArray<FName> NameList)
+{
+	NamedOptions.Empty();
+
+	for (FName Item : NameList)
+	{
+		NamedOptions.Add(MakeShared<FName>(Item));
+	}
+}
+
+void SGraphNode_RPGCommand::RefreshEnumOptions(const UEnum* Enum)
+{
+	NamedOptions.Empty();
+	if (!Enum)
+	{
+		return;
+	}
+
+	for (int32 Index = 0; Index < Enum->NumEnums(); ++Index)
+	{
+		// Skip hidden entries
+		if (Enum->HasMetaData(TEXT("Hidden"), Index))
+		{
+			continue;
+		}
+
+		const FString Name = Enum->GetNameStringByIndex(Index);
+
+		NamedOptions.Add(MakeShared<FName>(*Name));
+	}
 }
 
 TSharedRef<SWidget> SGraphNode_RPGCommand::CreateShowTextBody(UShowText* Command)
@@ -322,31 +360,36 @@ TSharedRef<SWidget> SGraphNode_RPGCommand::CreateStartConvoBody(UStartConvo* Com
 			{
 				return Command->ConvoAsset? Command->ConvoAsset->GetPathName() : FString();
 			})
-			.OnObjectChanged_Lambda([Command](const FAssetData& AssetData)
+			.OnObjectChanged_Lambda([this, Command](const FAssetData& AssetData)
 			{
 				Command->Modify();
 				Command->ConvoAsset = Cast<URPGConvoAsset>(AssetData.GetAsset());
 
-
+				if (Command->ConvoAsset)
+				{
+					RefreshNamedOptions(Command->ConvoAsset->GetConvoIds());
+				}
 			})
 		]
-		/* + SVerticalBox::Slot()
+		 + SVerticalBox::Slot()
 		.AutoHeight()
 		.Padding(0, 0, 0, 2)
 		[
 			SNew(STextBlock)
-				.Text(FText::FromString(TEXT("Convo Id")))
+			.Text(FText::FromString(TEXT("Convo Id")))
 		]
 		+ SVerticalBox::Slot()
 		.AutoHeight()
 		.Padding(8, 0, 0, 2)
 		[
 			SNew(SComboBox<TSharedPtr<FName>>)
-			.OptionsSource(GetConvoIds(Command->ConvoAsset))
+			.OptionsSource(&NamedOptions)
 			.OnGenerateWidget_Lambda([](TSharedPtr<FName> Item)
 			{
 				return SNew(STextBlock)
-					.Text(Item.IsValid()? FText::FromName(*Item) : FText::FromString(TEXT("Invalid")));
+					.Text(Item.IsValid()
+						? FText::FromName(*Item)
+						: FText::FromString(TEXT("Invalid")));
 			})
 			.OnSelectionChanged_Lambda([Command](TSharedPtr<FName> NewSelection, ESelectInfo::Type)
 			{
@@ -358,5 +401,55 @@ TSharedRef<SWidget> SGraphNode_RPGCommand::CreateStartConvoBody(UStartConvo* Com
 				Command->Modify();
 				Command->ConvoId = *NewSelection;
 			})
-		]*/;
+			[
+				SNew(STextBlock)
+				.Text_Lambda([Command]()
+				{
+					return !Command->ConvoId.IsNone()
+						? FText::FromName(Command->ConvoId)
+						: FText::FromString(TEXT("Select..."));
+				})
+			]
+		];
+}
+
+TSharedRef<SWidget> SGraphNode_RPGCommand::CreateMoveToBody(UMoveTo* Command)
+{
+	return SNew(SVerticalBox)
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(0, 0, 0, 2)
+		[
+			SNew(STextBlock)
+			.Text(FText::FromString(TEXT("Target")))
+		]
+		+ SVerticalBox::Slot()
+		.AutoHeight()
+		.Padding(8, 0, 0, 2)
+		[
+			SNew(SComboBox<TSharedPtr<FName>>)
+			.OptionsSource(&NamedOptions)
+			.OnGenerateWidget_Lambda([](TSharedPtr<FName> Item)
+			{
+				return SNew(STextBlock)
+					.Text(Item.IsValid()? FText::FromName(*Item) : FText::FromString(TEXT("Invalid")));
+			})
+			.OnSelectionChanged_Lambda([Command](TSharedPtr<FName> NewSelection, ESelectInfo::Type)
+			{
+				if (!NewSelection.IsValid())
+				{
+					return;
+				}
+				Command->Modify();
+
+				if (const UEnum* Enum = StaticEnum<ETargetToMove>())
+				{
+					const int64 Value = Enum->GetValueByNameString(NewSelection->ToString());
+					if (Value != INDEX_NONE)
+					{
+						Command->Target = static_cast<ETargetToMove>(Value);
+					}
+				}
+			})
+		];
 }

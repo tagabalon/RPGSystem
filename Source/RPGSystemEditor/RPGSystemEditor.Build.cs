@@ -42,6 +42,7 @@ public class RPGSystemEditor : ModuleRules
 				"Engine",
 				"Slate",
 				"SlateCore",
+                "InputCore",
                 "AssetTools",
                 "UnrealEd",
                 "PropertyEditor",

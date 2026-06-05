@@ -20,7 +20,7 @@ ERPGCommandResult UMoveTo::Execute_Implementation(AActor* TriggerActor, ARPGFiel
 
     switch (Target)
     {
-    case FTargetToMove::Self:
+    case ETargetToMove::Self:
         ActorToMove = TriggerActor;
         break;
     }
