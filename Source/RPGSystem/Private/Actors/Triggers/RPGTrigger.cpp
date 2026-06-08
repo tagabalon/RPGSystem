@@ -48,9 +48,9 @@ void ARPGTrigger::ExecuteTrigger_Implementation()
 		return;
 	}
 
-	const bool bStarted = TriggerRunner->RunTrigger(this, TriggerSource);
+	RunningStateIndex = TriggerRunner->RunTrigger(this, TriggerSource);
 
-	bThreadRunning = bStarted;
+	bThreadRunning = RunningStateIndex != -1;
 }
 
 void ARPGTrigger::SetTriggerData_Implementation(URPGTriggerData* pTriggerData)
@@ -63,7 +63,7 @@ const URPGTriggerData* ARPGTrigger::GetTriggerData_Implementation() const
     return TriggerData;
 }
 
-void ARPGTrigger::SetFinished_Implementation(ERPGTriggerFinishAction FinishAction)
+void ARPGTrigger::InitializeState_Implementation()
 {
 	EnableTrigger(false);
 

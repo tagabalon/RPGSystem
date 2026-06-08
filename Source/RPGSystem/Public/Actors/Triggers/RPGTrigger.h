@@ -20,7 +20,7 @@ public:
 	//ITriggerInterface functions
 	const URPGTriggerData* GetTriggerData_Implementation() const override;
 	void SetTriggerData_Implementation(URPGTriggerData* pTriggerData) override;
-	void SetFinished_Implementation(ERPGTriggerFinishAction FinishAction) override;
+	void InitializeState_Implementation() override;
 	void EnableTrigger_Implementation(bool Enabled) override;
 	void ExecuteTrigger_Implementation() override;
 	int32 GetActiveState_Implementation(FRPGTriggerState& ActiveState) const override;
@@ -39,6 +39,7 @@ protected:
 	bool bThreadFinished = false;
 
     int32 ActiveStateIndex = 0;
+    int32 RunningStateIndex = -1;
 	bool bRunning = false;
 	bool bEnabled = true;
 

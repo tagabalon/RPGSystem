@@ -24,13 +24,14 @@ UUserWidget* UStartConvo::GetMessageWidget(ARPGFieldCharacter* InstigatorActor) 
 	return nullptr;
 }
 
-ERPGCommandResult UStartConvo::Execute_Implementation(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor)
+ERPGCommandResult UStartConvo::Execute_Implementation(AActor* InTriggerActor, ARPGFieldCharacter* InstigatorActor)
 {
 	MessageWidget = GetMessageWidget(InstigatorActor);
 	if (!MessageWidget)
 	{
 		return ERPGCommandResult::Abort;
 	}
+	TriggerActor = InTriggerActor;
 
 	RuntimeConvo = ConvoAsset ? ConvoAsset->FindConvo(ConvoId) : nullptr;
 	CurrentLineIndex = 0;
@@ -66,7 +67,7 @@ ERPGCommandResult UStartConvo::Continue_Implementation()
 		{
 			if (URPGTriggerRunnerSubsystem* TriggerRunner = GameInstance->GetSubsystem<URPGTriggerRunnerSubsystem>())
 			{
-				TriggerRunner->FinishWaiting(this);
+				TriggerRunner->ContinueTrigger(TriggerActor, this);
 			}
 		}
 		IMessageInterface::Execute_CloseMessages(MessageWidget);

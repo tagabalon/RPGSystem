@@ -14,9 +14,6 @@ struct FRPGTriggerExecutionContext
 {
 	GENERATED_BODY()
 
-	UPROPERTY()
-	TObjectPtr<AActor> TriggerActor = nullptr;
-
 	int32 StateIndex = 0;
 
 	UPROPERTY()
@@ -24,6 +21,9 @@ struct FRPGTriggerExecutionContext
 
 	UPROPERTY()
 	TArray<TObjectPtr<URPGCommand>> Commands;
+
+	UPROPERTY()
+	TObjectPtr<URPGCommand> WaitingCommand;
 
 	int32 CommandIndex = 0;
 };
@@ -35,30 +35,25 @@ class RPGSYSTEM_API URPGTriggerRunnerSubsystem : public UGameInstanceSubsystem
 
 public:
 	UFUNCTION(BlueprintCallable, Category = "RPG|Triggers")
-	bool RunTrigger(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor);
+	int32 RunTrigger(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor);
 
-	UFUNCTION(BlueprintCallable, Category = "RPG|Events")
-	void ContinueTrigger();
+	UFUNCTION(BlueprintCallable, Category = "RPG|Triggers")
+	void ContinueTrigger(AActor* TriggerActor, URPGCommand* WaitingCommand);
 
-	UFUNCTION(BlueprintCallable, Category = "RPG|Events")
-	void AbortTrigger();
+	UFUNCTION(BlueprintCallable, Category = "RPG|Triggers")
+	void AbortTrigger(AActor* TriggerActor);
 
-	UFUNCTION(BlueprintPure, Category = "RPG|Events")
-	bool IsRunningTrigger() const { return bIsRunning; }
+	UFUNCTION(BlueprintPure, Category = "RPG|Triggers")
+	bool IsTriggerRunning(AActor* TriggerActor) const;
 
-	UFUNCTION(BlueprintCallable, Category = "RPG|Events")
-	void FinishWaiting(URPGCommand* PendingCommand);
+	//UFUNCTION(BlueprintCallable, Category = "RPG|Triggers")
+	//void FinishWaiting(URPGCommand* PendingCommand);
 
 private:
-	UPROPERTY()
-	TObjectPtr<URPGCommand> WaitingCommand;
 
 	UPROPERTY()
-	FRPGTriggerExecutionContext CurrentContext;
+	TMap<AActor*, FRPGTriggerExecutionContext> RunningContexts;
 
-	UPROPERTY()
-	bool bIsRunning = false;
-
-	void ExecuteNextCommand();
-	void FinishTrigger();
+	void ExecuteNextCommand(AActor* TriggerActor);
+	void FinishTrigger(AActor* TriggerActor);
 };

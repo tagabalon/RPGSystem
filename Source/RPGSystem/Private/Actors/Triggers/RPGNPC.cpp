@@ -50,6 +50,31 @@ void ARPGNPC::BeginPlay()
 	
 }
 
+void ARPGNPC::InitializeState(const FRPGTriggerState& ActiveState)
+{
+	if (ActiveState.CharacterMesh)
+	{
+		GetMesh()->SetSkeletalMesh(ActiveState.CharacterMesh);
+    }
+
+	if (ActiveState.CharacterAnimation)
+	{
+		GetMesh()->SetAnimInstanceClass(ActiveState.CharacterAnimation->GeneratedClass);
+    }
+
+	bThreadRunning = false;
+
+	/*switch (ActiveState.TriggerActivation)
+	{
+	case ERPGTriggerActivation::InteractButton:
+
+
+        break;
+	default:
+		break;
+	}*/
+}
+
 // Called every frame
 void ARPGNPC::Tick(float DeltaTime)
 {
@@ -95,9 +120,9 @@ void ARPGNPC::ExecuteTrigger_Implementation()
 		return;
 	}
 
-	const bool bStarted = TriggerRunner->RunTrigger(this, TriggerSource);
+	RunningStateIndex = TriggerRunner->RunTrigger(this, TriggerSource);
 
-	bThreadRunning = bStarted;
+	bThreadRunning = RunningStateIndex >= 0;
 }
 
 const URPGTriggerData* ARPGNPC::GetTriggerData_Implementation() const
@@ -115,9 +140,18 @@ int32 ARPGNPC::GetActiveState_Implementation(FRPGTriggerState& ActiveState) cons
 	return -1;
 }
 
-void ARPGNPC::SetFinished_Implementation(ERPGTriggerFinishAction FinishAction)
+void ARPGNPC::InitializeState_Implementation()
 {
+    // The active state was changed while the trigger was running, so we need to update it to the new state index
+	if (RunningStateIndex >= 0 && RunningStateIndex != ActiveStateIndex)
+	{
+		if (TriggerData && TriggerData->States.IsValidIndex(ActiveStateIndex))
+		{
+			InitializeState(TriggerData->States[ActiveStateIndex]);
+		}
 
+		RunningStateIndex = -1;
+	}
 }
 void ARPGNPC::EnableTrigger_Implementation(bool Enabled)
 {

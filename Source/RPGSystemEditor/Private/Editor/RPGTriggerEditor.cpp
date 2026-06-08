@@ -86,3 +86,16 @@ void FRPGTriggerEditor::UnregisterTabSpawners(const TSharedRef<FTabManager>& InT
 
 	InTabManager->UnregisterTabSpawner(GraphTabId);
 }
+
+void FRPGTriggerEditor::SaveAsset_Execute()
+{
+	//CompileGraphToTriggerData();
+
+	if (TriggerData)
+	{
+		TriggerData->Modify();
+		TriggerData->MarkPackageDirty();
+	}
+
+	FAssetEditorToolkit::SaveAsset_Execute();
+}

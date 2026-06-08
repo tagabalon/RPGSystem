@@ -36,5 +36,5 @@ public:
     void EnableTrigger(bool Enabled);
 
     UFUNCTION(BlueprintCallable, BlueprintNativeEvent, Category = "Trigger")
-    void SetFinished(ERPGTriggerFinishAction FinishAction);
+    void InitializeState();
 };

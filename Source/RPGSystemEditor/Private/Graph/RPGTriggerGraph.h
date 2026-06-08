@@ -22,4 +22,6 @@ public:
 	void RebuildFromStateCommands();
 
 	bool IsValidGraph() const;
+
+	virtual void AddNode(UEdGraphNode* NodeToAdd, bool bUserAction = false, bool bSelectNewNode = true) override;
 };

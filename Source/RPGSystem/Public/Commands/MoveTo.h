@@ -23,7 +23,7 @@ class RPGSYSTEM_API UMoveTo : public URPGCommand
 	GENERATED_BODY()
 public:
     // URPGCommand interface
-	virtual ERPGCommandResult Execute_Implementation(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor) override;
+	virtual ERPGCommandResult Execute_Implementation(AActor* InTriggerActor, ARPGFieldCharacter* InstigatorActor) override;
 	virtual ERPGCommandResult Continue_Implementation() override;
 
     // The target to move. If PartyFollower is selected, the command will try to move the first party member that is not the main character.
@@ -49,6 +49,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<ARPGFieldCharacter> Instigator;
+
+	UPROPERTY()
+	TObjectPtr<AActor> TriggerActor;
 
 #if WITH_EDITOR
 public:

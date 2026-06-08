@@ -3,41 +3,42 @@
 #include "CoreMinimal.h"
 #include "RPGConstants.h"
 #include "RPGTypes.h"
-#include "Data/RPGDatabase.h"
 
 #include "RPGCharacters.generated.h"
 
+class ACharacter;
 class URPGClasses;
+class URPGDatabase;
 class ARPGFieldCharacter;
 
 USTRUCT(BlueprintType)
-struct FEquipArmor
+struct RPGSYSTEM_API FEquipItem
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 ArmorType = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (GetOptions = "GetEquipmentTypeOptions"))
+	FName EquipmentType;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 ArmorId = 0;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (GetOptions = "GetItemOptions"))
+	FName ItemId;
 };
 
 
 USTRUCT(BlueprintType)
-struct FRPGCharacterData
+struct RPGSYSTEM_API FRPGCharacterData
 {
 	GENERATED_BODY()
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Identity")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General Settings", meta = (DisplayName = "Unique Id"))
 	FName RPGCharacterId;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General Settings", meta = (DisplayName = "Name"))
 	FString RPGCharacterName;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General Settings")
 	FString Nickname;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (GetOptions = "GetClassIdsOptions"), Category = "General Settings")
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (GetOptions = "GetClassIdsOptions", DisplayName = "Class"), Category = "General Settings")
 	FName RPGClassId;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "General Settings")
@@ -49,66 +50,49 @@ struct FRPGCharacterData
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (MultiLine = true), Category = "General Settings")
 	FString Profile;
 
-	// Unity Sprite equivalents are usually UTexture2D or UPaperSprite.
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
 	TObjectPtr<UTexture2D> CharacterSprite = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
 	TObjectPtr<UTexture2D> BattlePortrait = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
 	TSoftClassPtr<ARPGFieldCharacter> FieldCharacterClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
+	TSoftClassPtr<ACharacter> CombatCharacterClass;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
 	TSubclassOf<UAnimInstance> BattleAnimatorClass;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<int32> StatBonuses = { 0, 0, 0, 0, 0, 0 };
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TMap<FName, FName> StartingEquipment;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<FEquipArmor> Armors;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TArray<int32> AttackSkills;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	int32 Build = 0;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
 	TObjectPtr<UTexture2D> SmallIcon = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TSubclassOf<AActor> CombatMeshClass;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Visual")
 	TObjectPtr<UTexture2D> MenuIcon = nullptr;
 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Base Stat Bonuses")
+	TMap<EBaseStat, FName> StatBonuses;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Starting Equipment")
+	TArray<FEquipItem> StartingEquipment;
+	//TMap<FName, FName> StartingEquipment;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Skills")
+	TArray<FName> AttackSkills;
+
+	/*UPROPERTY(EditAnywhere, BlueprintReadWrite)
 	TSubclassOf<AActor> EquipmentMeshClass;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite)
-	TObjectPtr<UObject> SkillTree = nullptr;
+	TObjectPtr<UObject> SkillTree = nullptr;*/
 
 	FRPGCharacterData();
 
-	void AddAttackSkill(int32 SkillIndex)
-	{
-		AttackSkills.Add(SkillIndex);
-	}
+	void AddAttackSkill(FName SkillId);
+	const FEquipItem* GetStartingEquipment(FName EquipmentType) const;
+	void SetStartingEquipment(FName EquipmentType, FName ItemId);
 
-	void AdjustEquip(int32 NewLength)
-	{
-		/*const int32 OldLength = Equipments.Num();
-		Equipments.SetNum(NewLength);
-
-		for (int32 i = OldLength; i < NewLength; ++i)
-		{
-			Equipments[i] = -1;
-		}*/
-	}
 };
 
 UCLASS(BlueprintType)
@@ -117,14 +101,12 @@ class RPGSYSTEM_API URPGCharacters : public UPrimaryDataAsset
 	GENERATED_BODY()
 
 public:
-	UFUNCTION()
-	TArray<FName> GetClassIdsOptions() const
-	{
-        return URPGDatabase::GetRPGClassIds();
-	}
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly)
 	TArray<FRPGCharacterData> Characters;
+
+	UFUNCTION()
+	TArray<FName> GetClassIdsOptions() const;
 
 	UFUNCTION(BlueprintPure)
 	int32 GetCharacterCount() const
@@ -133,27 +115,12 @@ public:
 	}
 
 	UFUNCTION(BlueprintPure)
-	bool GetCharacterData(FName CharacterId, FRPGCharacterData& OutCharacter) const
-	{
-		const int32 Index = Characters.IndexOfByPredicate([&](const FRPGCharacterData& Character)
-		{
-			return Character.RPGCharacterId == CharacterId;
-        });
-
-
-		if (Characters.IsValidIndex(Index))
-		{
-			OutCharacter = Characters[Index];
-			return true;
-		}
-
-		return false;
-	}
+	bool GetCharacterData(FName CharacterId, FRPGCharacterData& OutCharacter) const;
 
 	UFUNCTION(BlueprintCallable)
-	void AddCharacter()
+	int32 AddCharacter()
 	{
-		Characters.Add(FRPGCharacterData());
+		return Characters.Add(FRPGCharacterData());
 	}
 
 	UFUNCTION(BlueprintPure)

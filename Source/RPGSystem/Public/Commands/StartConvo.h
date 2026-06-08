@@ -21,7 +21,7 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (GetOptions = "GetConvoOptions"), Category = "Dialogue")
 	FName ConvoId;
 
-	virtual ERPGCommandResult Execute_Implementation(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor) override;
+	virtual ERPGCommandResult Execute_Implementation(AActor* InTriggerActor, ARPGFieldCharacter* InstigatorActor) override;
 
 	virtual ERPGCommandResult Continue_Implementation() override;
 
@@ -39,6 +39,9 @@ private:
 
 	UPROPERTY()
 	TObjectPtr<ARPGFieldCharacter> Instigator;
+
+	UPROPERTY()
+	TObjectPtr<AActor> TriggerActor;
 
 	UPROPERTY()
 	TObjectPtr<UUserWidget> MessageWidget;

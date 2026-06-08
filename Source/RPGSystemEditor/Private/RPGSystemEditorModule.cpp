@@ -1,7 +1,11 @@
 #include "RPGSystemEditorModule.h"
 
 #include "AssetTools/AssetTypeActions_RPGTriggerData.h"
+#include "AssetTools/AssetTypeActions_RPGDatabaseData.h"
+#include "Data/RPGCharacters.h"
+#include "Details/RPGCharacterDataCustomization.h"
 
+#include "PropertyEditorModule.h"
 #include "AssetToolsModule.h"
 #include "EdGraphUtilities.h"
 #include "Graph/RPGGraphNodeFactory.h"
@@ -12,14 +16,16 @@
 void FRPGEditorModule::StartupModule()
 {
 	IAssetTools& AssetTools = FModuleManager::LoadModuleChecked<FAssetToolsModule>("AssetTools").Get();
-
-	RegisterAssetTypeAction(
-		AssetTools,
-		MakeShared<FAssetTypeActions_RPGTriggerData>()
-	);
+	RegisterAssetTypeAction(AssetTools, MakeShared<FAssetTypeActions_RPGTriggerData>());
+	RegisterAssetTypeAction(AssetTools, MakeShared<FAssetTypeActions_RPGDatabaseData>());
 
 	GraphNodeFactory = MakeShared<FRPGGraphNodeFactory>();
 	FEdGraphUtilities::RegisterVisualNodeFactory(GraphNodeFactory);
+
+	/*FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	PropertyModule.RegisterCustomPropertyTypeLayout(FRPGCharacterData::StaticStruct()->GetFName(), FOnGetPropertyTypeCustomizationInstance::CreateStatic(&FRPGCharacterDataCustomization::MakeInstance));
+
+	PropertyModule.NotifyCustomizationModuleChanged();*/
 }
 
 void FRPGEditorModule::ShutdownModule()
@@ -41,12 +47,12 @@ void FRPGEditorModule::ShutdownModule()
 		FEdGraphUtilities::UnregisterVisualNodeFactory(GraphNodeFactory);
 		GraphNodeFactory.Reset();
 	}
+
+	/*FPropertyEditorModule& PropertyModule = FModuleManager::LoadModuleChecked<FPropertyEditorModule>("PropertyEditor");
+	PropertyModule.UnregisterCustomPropertyTypeLayout(FRPGCharacterData::StaticStruct()->GetFName());*/
 }
 
-void FRPGEditorModule::RegisterAssetTypeAction(
-	IAssetTools& AssetTools,
-	TSharedRef<IAssetTypeActions> Action
-)
+void FRPGEditorModule::RegisterAssetTypeAction(IAssetTools& AssetTools, TSharedRef<IAssetTypeActions> Action)
 {
 	AssetTools.RegisterAssetTypeActions(Action);
 	RegisteredAssetTypeActions.Add(Action);

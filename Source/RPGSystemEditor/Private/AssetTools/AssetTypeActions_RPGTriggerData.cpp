@@ -23,10 +23,7 @@ uint32 FAssetTypeActions_RPGTriggerData::GetCategories()
 	return EAssetTypeCategories::Gameplay;
 }
 
-void FAssetTypeActions_RPGTriggerData::OpenAssetEditor(
-	const TArray<UObject*>& InObjects,
-	TSharedPtr<IToolkitHost> EditWithinLevelEditor
-)
+void FAssetTypeActions_RPGTriggerData::OpenAssetEditor(const TArray<UObject*>& InObjects, TSharedPtr<IToolkitHost> EditWithinLevelEditor)
 {
 	for (UObject* Object : InObjects)
 	{
@@ -38,10 +35,6 @@ void FAssetTypeActions_RPGTriggerData::OpenAssetEditor(
 
 		TSharedRef<FRPGTriggerEditor> Editor = MakeShared<FRPGTriggerEditor>();
 
-		Editor->InitRPGTriggerEditor(
-			EToolkitMode::Standalone,
-			EditWithinLevelEditor,
-			TriggerData
-		);
+		Editor->InitRPGTriggerEditor(EToolkitMode::Standalone, EditWithinLevelEditor, TriggerData);
 	}
 }

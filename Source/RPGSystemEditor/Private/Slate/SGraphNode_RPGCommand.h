@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "SGraphNode.h"
+#include "SNodePanel.h"
 
 class URPGCommandGraphNode;
 
@@ -19,6 +20,7 @@ public:
 	void Construct(const FArguments& InArgs, URPGCommandGraphNode* InNode);
 
 	virtual void UpdateGraphNode() override;
+	virtual void MoveTo(const FVector2D& NewPosition, FNodeSet& NodeFilter, bool bMarkDirty = true) override;
 
 private:
 	FText GetBodyText() const;

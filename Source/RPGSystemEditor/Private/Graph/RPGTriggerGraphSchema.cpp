@@ -30,8 +30,7 @@ void URPGTriggerGraphSchema::GetGraphContextActions(FGraphContextMenuBuilder& Co
 			MenuDesc
 		);
 
-		TSharedPtr<FRPGTriggerGraphSchemaAction_NewCommand> Action =
-			MakeShared<FRPGTriggerGraphSchemaAction_NewCommand>(
+		TSharedPtr<FRPGTriggerGraphSchemaAction_NewCommand> Action = MakeShared<FRPGTriggerGraphSchemaAction_NewCommand>(
 				Category,
 				MenuDesc,
 				ToolTip,
@@ -94,6 +93,24 @@ bool URPGTriggerGraphSchema::TryCreateConnection(UEdGraphPin* A, UEdGraphPin* B)
 
 	return UEdGraphSchema::TryCreateConnection(A, B);
 }
+
+//FConnectionDrawingPolicy* URPGTriggerGraphSchema::CreateConnectionDrawingPolicy(
+//	int32 InBackLayerID,
+//	int32 InFrontLayerID,
+//	float InZoomFactor,
+//	const FSlateRect& InClippingRect,
+//	FSlateWindowElementList& InDrawElements,
+//	UEdGraph* InGraphObj
+//) const
+//{
+//	return new FConnectionDrawingPolicy(
+//		InBackLayerID,
+//		InFrontLayerID,
+//		InZoomFactor,
+//		InClippingRect,
+//		InDrawElements
+//	);
+//}
 
 void URPGTriggerGraphSchema::BreakNodeLinks(UEdGraphNode& TargetNode) const
 {

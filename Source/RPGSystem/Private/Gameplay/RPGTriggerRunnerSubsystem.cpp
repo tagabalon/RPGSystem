@@ -6,11 +6,16 @@
 #include "Data/RPGTriggerData.h"
 #include "Interface/TriggerInterface.h"
 
-bool URPGTriggerRunnerSubsystem::RunTrigger(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor)
+int32 URPGTriggerRunnerSubsystem::RunTrigger(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor)
 {
-	if (bIsRunning || !TriggerActor || !TriggerActor->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
+	if (!TriggerActor || !TriggerActor->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
 	{
 		return false;
+	}
+
+	if (IsTriggerRunning(TriggerActor))
+	{
+        return false;
 	}
 
 	const URPGTriggerData* TriggerData = ITriggerInterface::Execute_GetTriggerData(TriggerActor);
@@ -22,37 +27,43 @@ bool URPGTriggerRunnerSubsystem::RunTrigger(AActor* TriggerActor, ARPGFieldChara
 	FRPGTriggerState ActiveState;	
 	int32 ActiveStateIndex = ITriggerInterface::Execute_GetActiveState(TriggerActor, ActiveState);
 
-	bIsRunning = true;
 
-	CurrentContext = FRPGTriggerExecutionContext();
-	CurrentContext.TriggerActor = TriggerActor;
-	CurrentContext.StateIndex = ActiveStateIndex;
-	CurrentContext.InstigatorActor = InstigatorActor;
-	CurrentContext.Commands = ActiveState.Commands;
-	CurrentContext.CommandIndex = 0;
+	FRPGTriggerExecutionContext NewContext = FRPGTriggerExecutionContext();
+	NewContext.StateIndex = ActiveStateIndex;
+	NewContext.InstigatorActor = InstigatorActor;
+	NewContext.Commands = ActiveState.Commands;
+	NewContext.CommandIndex = 0;
 
-	ExecuteNextCommand();
-	return true;
+    RunningContexts.Add(TriggerActor, NewContext);
+
+	ExecuteNextCommand(TriggerActor);
+	return ActiveStateIndex;
 }
 
-void URPGTriggerRunnerSubsystem::ExecuteNextCommand()
+void URPGTriggerRunnerSubsystem::ExecuteNextCommand(AActor* TriggerActor)
 {
-	if (!bIsRunning)
+	if (!RunningContexts.Contains(TriggerActor))
 	{
 		return;
 	}
 
-	while (CurrentContext.Commands.IsValidIndex(CurrentContext.CommandIndex))
+    FRPGTriggerExecutionContext* CurrentContext = &RunningContexts.FindChecked(TriggerActor);
+	if (!CurrentContext)
 	{
-		URPGCommand* Command = CurrentContext.Commands[CurrentContext.CommandIndex];
-		CurrentContext.CommandIndex++;
+		return;
+    }
+
+	while (CurrentContext->Commands.IsValidIndex(CurrentContext->CommandIndex))
+	{
+		URPGCommand* Command = CurrentContext->Commands[CurrentContext->CommandIndex];
+		CurrentContext->CommandIndex++;
 
 		if (!Command)
 		{
 			continue;
 		}
 
-		const ERPGCommandResult Result = Command->Execute(CurrentContext.TriggerActor, CurrentContext.InstigatorActor);
+		const ERPGCommandResult Result = Command->Execute(TriggerActor, CurrentContext->InstigatorActor);
 
 		switch (Result)
 		{
@@ -60,59 +71,65 @@ void URPGTriggerRunnerSubsystem::ExecuteNextCommand()
 			continue;
 
 		case ERPGCommandResult::Wait:
-			WaitingCommand = Command;
-			return;
-
-		case ERPGCommandResult::Finish:
-			FinishTrigger();
+			CurrentContext->WaitingCommand = Command;
 			return;
 
 		case ERPGCommandResult::Abort:
-			AbortTrigger();
+			AbortTrigger(TriggerActor);
 			return;
 		}
 	}
 
-	FinishTrigger();
+	FinishTrigger(TriggerActor);
 }
 
-void URPGTriggerRunnerSubsystem::ContinueTrigger()
+void URPGTriggerRunnerSubsystem::ContinueTrigger(AActor* TriggerActor, URPGCommand* WaitingCommand)
 {
-	if (WaitingCommand)
+	if (FRPGTriggerExecutionContext* CurrentContext = &RunningContexts.FindChecked(TriggerActor))	
 	{
-		const ERPGCommandResult Result = WaitingCommand->Continue();
-
-		if (Result == ERPGCommandResult::Wait)
+		if (CurrentContext->WaitingCommand == WaitingCommand)
 		{
-			return;
-		}
-
-		WaitingCommand = nullptr;
+			CurrentContext->WaitingCommand = nullptr;
+        }
+		ExecuteNextCommand(TriggerActor);
 	}
-
-	ExecuteNextCommand();
 }
 
-void URPGTriggerRunnerSubsystem::FinishWaiting(URPGCommand* PendingCommand)
+//void URPGTriggerRunnerSubsystem::FinishWaiting(URPGCommand* PendingCommand)
+//{
+//	if (WaitingCommand == PendingCommand)
+//	{
+//		WaitingCommand = nullptr;
+//
+//		ExecuteNextCommand();
+//	}
+//}
+
+void URPGTriggerRunnerSubsystem::AbortTrigger(AActor* TriggerActor)
 {
-	if (WaitingCommand == PendingCommand)
+	if (RunningContexts.Contains(TriggerActor))
 	{
-		WaitingCommand = nullptr;
-
-		ExecuteNextCommand();
-	}
+		RunningContexts.Remove(TriggerActor);
+    }
 }
 
-void URPGTriggerRunnerSubsystem::AbortTrigger()
+bool URPGTriggerRunnerSubsystem::IsTriggerRunning(AActor* TriggerActor) const
 {
-	bIsRunning = false;
-	CurrentContext = FRPGTriggerExecutionContext();
+	if (RunningContexts.Contains(TriggerActor))
+	{
+		return true;
+    }
+	return false;
 }
 
-void URPGTriggerRunnerSubsystem::FinishTrigger()
+void URPGTriggerRunnerSubsystem::FinishTrigger(AActor* TriggerActor)
 {
-	AActor* Trigger = CurrentContext.TriggerActor.Get();
+	if (RunningContexts.Contains(TriggerActor))
+	{
+		RunningContexts.Remove(TriggerActor);
 
+		ITriggerInterface::Execute_InitializeState(TriggerActor);
+    }
 	/*if (Trigger->GetClass()->ImplementsInterface(UTriggerInterface::StaticClass()))
 	{
 		if (const URPGTriggerData* TriggerData = ITriggerInterface::Execute_GetTriggerData(Trigger))
@@ -125,5 +142,4 @@ void URPGTriggerRunnerSubsystem::FinishTrigger()
 		}
 	}*/
 
-	CurrentContext = FRPGTriggerExecutionContext();
 }

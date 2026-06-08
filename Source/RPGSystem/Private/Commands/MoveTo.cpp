@@ -12,9 +12,10 @@
 #include "EngineUtils.h"
 #endif // WITH_EDITOR
 
-ERPGCommandResult UMoveTo::Execute_Implementation(AActor* TriggerActor, ARPGFieldCharacter* InstigatorActor)
+ERPGCommandResult UMoveTo::Execute_Implementation(AActor* InTriggerActor, ARPGFieldCharacter* InstigatorActor)
 {
     Instigator = InstigatorActor;
+    TriggerActor = InTriggerActor;
 
     AActor* ActorToMove = nullptr;
 
@@ -85,7 +86,7 @@ void UMoveTo::OnReachDestination(FAIRequestID RequestID, const FPathFollowingRes
     {
         if (URPGTriggerRunnerSubsystem* TriggerRunner = GameInstance->GetSubsystem<URPGTriggerRunnerSubsystem>())
         {
-            TriggerRunner->FinishWaiting(this);
+            TriggerRunner->ContinueTrigger(TriggerActor, this);
         }
     }
 }

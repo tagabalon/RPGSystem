@@ -11,17 +11,23 @@
 #include "SGraphPin.h"
 #include "Widgets/SBoxPanel.h"
 #include "Widgets/Layout/SBorder.h"
+#include "Widgets/Layout/SScaleBox.h"
 #include "Widgets/Input/SComboBox.h"
 #include "Widgets/Input/SEditableTextBox.h"
 #include "Widgets/Input/SMultiLineEditableTextBox.h"
 #include "Widgets/Text/STextBlock.h"
 
-void SGraphNode_RPGCommand::Construct(
-	const FArguments& InArgs,
-	URPGCommandGraphNode* InNode
-)
+void SGraphNode_RPGCommand::Construct(const FArguments& InArgs, URPGCommandGraphNode* InNode)
 {
 	GraphNode = InNode;
+
+	if (InNode->Command)
+	{
+		if (UMoveTo* MoveToCommand = Cast<UMoveTo>(InNode->Command))
+		{
+			RefreshEnumOptions(StaticEnum<ETargetToMove>());
+		}
+	}
 	UpdateGraphNode();
 }
 
@@ -36,60 +42,58 @@ void SGraphNode_RPGCommand::UpdateGraphNode()
 	this->ContentScale.Bind(this, &SGraphNode::GetContentScale);
 
 	GetOrAddSlot(ENodeZone::Center)
+	[
+		SNew(SBorder)
+		.BorderImage(FAppStyle::GetBrush("Graph.Node.Body"))
+		.Padding(0)
 		[
-			SNew(SBorder)
-				.BorderImage(FAppStyle::GetBrush("Graph.Node.Body"))
-				.Padding(0)
+			SNew(SVerticalBox)
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			[
+				SNew(SBorder)
+				.BorderImage(FAppStyle::GetBrush("WhiteBrush"))
+				.BorderBackgroundColor(FLinearColor(0.0f, 0.478f, 0.2f))
+				.Padding(FMargin(8.0f, 4.0f))
 				[
-					SNew(SVerticalBox)
-
-						+ SVerticalBox::Slot()
-						.AutoHeight()
-						[
-							SNew(SBorder)
-								.BorderImage(FAppStyle::GetBrush("WhiteBrush"))
-								.BorderBackgroundColor(FLinearColor(0.0f, 0.478f, 0.2f))
-								.Padding(FMargin(8.0f, 4.0f))
-								[
-									SNew(STextBlock)
-										.Text(this, &SGraphNode_RPGCommand::GetTitleText)
-										.ColorAndOpacity(FLinearColor::Black)
-								]
-						]
-
-					+ SVerticalBox::Slot()
-						.AutoHeight()
-						.Padding(8.0f)
-						[
-							CreateCommandBodyWidget()
-						]
-
-						+ SVerticalBox::Slot()
-						.AutoHeight()
-						.Padding(FMargin(4.0f, 2.0f))
-						[
-							SNew(SHorizontalBox)
-
-								+ SHorizontalBox::Slot()
-								.AutoWidth()
-								[
-									SAssignNew(LeftNodeBox, SVerticalBox)
-								]
-
-								+ SHorizontalBox::Slot()
-								.FillWidth(1.0f)
-								[
-									SNew(SSpacer)
-								]
-
-								+ SHorizontalBox::Slot()
-								.AutoWidth()
-								[
-									SAssignNew(RightNodeBox, SVerticalBox)
-								]
-						]
+					SNew(STextBlock)
+					.Text(this, &SGraphNode_RPGCommand::GetTitleText)
+					.ColorAndOpacity(FLinearColor::Black)
 				]
-		];
+			]
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(8.0f)
+			[
+				CreateCommandBodyWidget()
+			]
+
+			+ SVerticalBox::Slot()
+			.AutoHeight()
+			.Padding(FMargin(4.0f, 2.0f))
+			[
+				SNew(SHorizontalBox)
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SAssignNew(LeftNodeBox, SVerticalBox)
+				]
+
+				+ SHorizontalBox::Slot()
+				.FillWidth(1.0f)
+				[
+					SNew(SSpacer)
+				]
+
+				+ SHorizontalBox::Slot()
+				.AutoWidth()
+				[
+					SAssignNew(RightNodeBox, SVerticalBox)
+				]
+			]
+		]
+	];
 
 	CreatePinWidgets();
 }
@@ -107,6 +111,17 @@ FText SGraphNode_RPGCommand::GetTitleText() const
 #else
 	return FText::FromString(TEXT("Command"));
 #endif
+}
+
+void SGraphNode_RPGCommand::MoveTo(const FVector2D& NewPosition, FNodeSet& NodeFilter, bool bMarkDirty)
+{
+	SGraphNode::MoveTo(NewPosition, NodeFilter, bMarkDirty);
+	const URPGCommandGraphNode* RPGNode = Cast<URPGCommandGraphNode>(GraphNode);
+	if (RPGNode && RPGNode->Command)
+	{
+		RPGNode->Command->Modify();
+		RPGNode->Command->EditorPosition = NewPosition;
+    }
 }
 
 TSharedRef<SWidget> SGraphNode_RPGCommand::CreateCommandBodyWidget()
@@ -127,7 +142,6 @@ TSharedRef<SWidget> SGraphNode_RPGCommand::CreateCommandBodyWidget()
     }
 	else if (UMoveTo* MoveTo = Cast<UMoveTo>(RPGNode->Command))
 	{
-		RefreshEnumOptions(StaticEnum<ETargetToMove>());
 		return CreateMoveToBody(MoveTo);
 	}
 
@@ -267,11 +281,16 @@ TSharedRef<SWidget> SGraphNode_RPGCommand::CreateShowTextBody(UShowText* Command
 		.Padding(0, 0, 0, 2)
 		[
 			SNew(SBox)
-			.WidthOverride(64)
-			.HeightOverride(64)
+			.WidthOverride(64.f)
+			.HeightOverride(64.f)
 			[
-				SNew(SImage)
-				.Image(GetTextureBrush(Command->Face))
+				SNew(SScaleBox)
+					.Stretch(EStretch::ScaleToFit)
+					.StretchDirection(EStretchDirection::DownOnly)
+					[
+						SNew(SImage)
+						.Image(GetTextureBrush(Command->Face))
+					]
 			]
 		]
 		+ SVerticalBox::Slot()

@@ -1,13 +1,11 @@
 #pragma once
 
 #include "CoreMinimal.h"
-//#include "RPGDerivedStats.h"
+
+#include "RPGWeapons.h"
 
 #include "RPGSkills.generated.h"
 
-//class UTexture2D;
-//class AActor;
-//class ARPGProjectile;
 
 UENUM(BlueprintType)
 enum class ERPGSkillType : uint8
@@ -104,15 +102,6 @@ enum class ERPGGameEffectType : uint8
 {
 	AddStatus
 	// TODO: Add remaining GameEffectType values.
-};
-
-UENUM(BlueprintType)
-enum class ERPGWeaponType : uint8
-{
-	Any,
-	SwordsAndAxes,
-	AllButShield
-	// TODO: Replace/merge with your real weapon type enum later.
 };
 
 USTRUCT(BlueprintType)
@@ -269,7 +258,7 @@ struct FRPGSkillData
 	int32 SkillRange = 5;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Requirements")
-	ERPGWeaponType MainWeaponRequired = ERPGWeaponType::Any;
+	ERPGWeaponType MainWeaponRequired = ERPGWeaponType::None;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Combat")
 	float Speed = 1.0f;

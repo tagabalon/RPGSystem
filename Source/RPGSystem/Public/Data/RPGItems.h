@@ -206,7 +206,7 @@ public:
 	}
 
 	UFUNCTION(BlueprintPure, Category = "Items")
-	TArray<FString> GetItemNameOptions() const
+	TArray<FString> GetItemNames() const
 	{
 		TArray<FString> Names;
 		Names.Reserve(Items.Num());

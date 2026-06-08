@@ -8,11 +8,7 @@ class URPGTriggerData;
 class RPGSYSTEMEDITOR_API FRPGTriggerEditor : public FAssetEditorToolkit
 {
 public:
-	void InitRPGTriggerEditor(
-		const EToolkitMode::Type Mode,
-		const TSharedPtr<IToolkitHost>& InitToolkitHost,
-		URPGTriggerData* InTriggerData
-	);
+	void InitRPGTriggerEditor(const EToolkitMode::Type Mode, const TSharedPtr<IToolkitHost>& InitToolkitHost, URPGTriggerData* InTriggerData);
 
 	virtual FName GetToolkitFName() const override;
 	virtual FText GetBaseToolkitName() const override;
@@ -21,6 +17,8 @@ public:
 	
 	virtual void RegisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) override;
 	virtual void UnregisterTabSpawners(const TSharedRef<FTabManager>& InTabManager) override;
+
+	virtual void SaveAsset_Execute() override;
 
 private:
 	static const FName GraphTabId;

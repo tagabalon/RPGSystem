@@ -22,7 +22,7 @@ public:
 	ARPGTouchTrigger();
 
     // RPGTrigger
-	void SetFinished_Implementation(ERPGTriggerFinishAction FinishAction) override;
+	void InitializeState_Implementation() override;
 	void EnableTrigger_Implementation(bool bValue) override;
 
 protected:

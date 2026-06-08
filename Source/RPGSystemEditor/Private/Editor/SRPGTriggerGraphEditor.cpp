@@ -22,21 +22,19 @@ void SRPGTriggerGraphEditor::Construct(const FArguments& InArgs, URPGTriggerData
 	TriggerData = InTriggerData;
 
 	ChildSlot
+	[
+		SNew(SVerticalBox)
+		+ SVerticalBox::Slot()
+		.AutoHeight()
 		[
-			SNew(SVerticalBox)
-
-				+ SVerticalBox::Slot()
-				.AutoHeight()
-				[
-					BuildStateTabs()
-				]
-
-				+ SVerticalBox::Slot()
-				.FillHeight(1.0f)
-				[
-					SAssignNew(StatePageSwitcher, SWidgetSwitcher)
-				]
-		];
+			BuildStateTabs()
+		]
+		+ SVerticalBox::Slot()
+		.FillHeight(1.0f)
+		[
+			SAssignNew(StatePageSwitcher, SWidgetSwitcher)
+		]
+	];
 
 	if (!TriggerData)
 	{
@@ -48,9 +46,9 @@ void SRPGTriggerGraphEditor::Construct(const FArguments& InArgs, URPGTriggerData
 		StateGraphs.Add(CreateGraphForState(StateIndex));
 
 		StatePageSwitcher->AddSlot()
-			[
-				BuildStatePage(StateIndex)
-			];
+		[
+			BuildStatePage(StateIndex)
+		];
 	}
 
 	SelectState(0);
@@ -92,9 +90,7 @@ TSharedRef<SWidget> SRPGTriggerGraphEditor::BuildStateTabs()
 
 TSharedRef<SWidget> SRPGTriggerGraphEditor::BuildStatePage(int32 StateIndex)
 {
-	URPGTriggerGraph* Graph = StateGraphs.IsValidIndex(StateIndex)
-		? StateGraphs[StateIndex]
-		: nullptr;
+	URPGTriggerGraph* Graph = StateGraphs.IsValidIndex(StateIndex)? StateGraphs[StateIndex] : nullptr;
 
 	FGraphAppearanceInfo AppearanceInfo;
 	AppearanceInfo.CornerText = FText::Format(

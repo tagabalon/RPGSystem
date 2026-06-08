@@ -323,14 +323,14 @@ void ARPGTouchTrigger::Interact(ARPGFieldCharacter* InstigatorActor)
 		return;
 	}
 
-	const bool bStarted = TriggerRunner->RunTrigger(this, InstigatorActor);	
+	RunningStateIndex = TriggerRunner->RunTrigger(this, InstigatorActor);
 
-	bRunning = bStarted;
+	bRunning = RunningStateIndex != -1;
 }
 
-void ARPGTouchTrigger::SetFinished_Implementation(ERPGTriggerFinishAction FinishAction)
+void ARPGTouchTrigger::InitializeState_Implementation()
 {
-	switch (FinishAction)
+	/*switch (FinishAction)
 	{
 	case ERPGTriggerFinishAction::Hide:
 		SetActorHiddenInGame(true);
@@ -345,7 +345,7 @@ void ARPGTouchTrigger::SetFinished_Implementation(ERPGTriggerFinishAction Finish
 	default:
 		EnableTrigger(false);
 		break;
-	}
+	}*/
 
 	bThreadRunning = false;
 	bThreadFinished = true;

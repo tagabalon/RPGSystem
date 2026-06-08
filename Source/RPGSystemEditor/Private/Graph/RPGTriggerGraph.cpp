@@ -1,6 +1,7 @@
 #include "Graph/RPGTriggerGraph.h"
 
 #include "Graph/RPGCommandGraphNode.h"
+#include "Graph/RPGStartGraphNode.h"
 #include "Graph/RPGTriggerGraphSchema.h"
 
 #include "Data/RPGTriggerData.h"
@@ -27,12 +28,17 @@ void URPGTriggerGraph::RebuildFromStateCommands()
 
 	const FRPGTriggerState& State = TriggerData->States[StateIndex];
 
+	URPGStartGraphNode* StartNode =	NewObject<URPGStartGraphNode>(this);
+	StartNode->CreateNewGuid();
+	AddNode(StartNode);
+
+	StartNode->AllocateDefaultPins();
+
 	const int32 NodeSpacingY = 140;
 	const int32 StartX = 200;
 	const int32 StartY = 100;
 
-	URPGCommandGraphNode* PreviousNode = nullptr;
-
+	UEdGraphNode* PreviousNode = StartNode;
 	for (int32 CommandIndex = 0; CommandIndex < State.Commands.Num(); ++CommandIndex)
 	{
 		URPGCommand* Command = State.Commands[CommandIndex];
@@ -41,17 +47,12 @@ void URPGTriggerGraph::RebuildFromStateCommands()
 			continue;
 		}
 
-		URPGCommandGraphNode* NewNode = NewObject<URPGCommandGraphNode>(
-			this,
-			URPGCommandGraphNode::StaticClass(),
-			NAME_None,
-			RF_Transactional
-		);
+		URPGCommandGraphNode* NewNode = NewObject<URPGCommandGraphNode>(this, URPGCommandGraphNode::StaticClass(), NAME_None, RF_Transactional);
 
 		NewNode->Initialize(Command);
 		NewNode->CreateNewGuid();
-		NewNode->NodePosX = StartX;
-		NewNode->NodePosY = StartY + CommandIndex * NodeSpacingY;
+		NewNode->NodePosX = Command->EditorPosition.X;
+		NewNode->NodePosY = Command->EditorPosition.Y;
 
 		AddNode(NewNode, false, false);
 
@@ -75,4 +76,24 @@ void URPGTriggerGraph::RebuildFromStateCommands()
 bool URPGTriggerGraph::IsValidGraph() const
 {
 	return TriggerData != nullptr && StateIndex != INDEX_NONE;
+}
+
+void URPGTriggerGraph::AddNode(UEdGraphNode* NodeToAdd, bool bUserAction, bool bSelectNewNode)
+{
+    Super::AddNode(NodeToAdd, bUserAction, bSelectNewNode);
+
+	if (URPGCommandGraphNode* CommandNode = Cast<URPGCommandGraphNode>(NodeToAdd))
+	{
+		if (TriggerData && TriggerData->States.IsValidIndex(StateIndex))
+		{
+			FRPGTriggerState& State = TriggerData->States[StateIndex];
+			if (!State.Commands.Contains(CommandNode->Command))
+			{
+				State.Commands.Add(CommandNode->Command);
+			}
+
+            TriggerData->Modify();
+            TriggerData->MarkPackageDirty();
+		}
+    }
 }
